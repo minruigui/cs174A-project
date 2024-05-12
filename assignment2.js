@@ -177,59 +177,7 @@ export class Assignment2 extends Base_Scene {
 
     draw_ball(){
         //TODO
-    }
 
-    draw_box(context, program_state, model_transform, i) {
- 
-        if (this.outline_visible) {
-            this.shapes.outline.draw(context, program_state, model_transform.times(Mat4.scale(1,1.5,1)), this.white, "LINES");
-        } else {
-            if (i % 2 == 1) {
-                this.shapes.strip.draw(context, program_state, model_transform.times(Mat4.scale(1,1.5,1)), this.materials.plastic.override({ color: this.colors[i] }), "TRIANGLE_STRIP");
-            } else {
-                this.shapes.cube.draw(context, program_state, model_transform.times(Mat4.scale(1,1.5,1)), this.materials.plastic.override({ color: this.colors[i] }));
-            }
-        }
-
-        model_transform = model_transform.times(Mat4.translation(0, 3, 0));
-        // if(i==1){
-        //     blue=hex_color("#ff0000")
-        // }
-        const t = program_state.animation_time / 2000;
-
-        // Calculate the sway angle based on time and box index
-        if (this.sway) {
-            this.sway_angle = Math.sin(t * Math.PI) * 0.05 * Math.PI;
-            this.sway_angle = Math.abs(this.sway_angle);
-        }
-        const sway_angle = this.sway_angle;
-        if(this.sway_angle>0){
-           
-            model_transform = model_transform.times(Mat4.translation(-1, -1.5, 0));
-            model_transform = model_transform.times(Mat4.rotation(sway_angle, 0, 0, 1));
-            // model_transform=model_transform.times(Mat4.scale(1,1.5,1))
-            model_transform = model_transform.times(Mat4.translation(1, 1.5, 0));
-        }else{
-            model_transform = model_transform.times(Mat4.translation(1, -1.5, 0));
-            model_transform = model_transform.times(Mat4.rotation(sway_angle, 0, 0, 1));
-            model_transform = model_transform.times(Mat4.translation(-1, 1.5, 0));
-        }
-
-        
-
-
-
-        // model_transform = model_transform.times(Mat4.translation(-1, 0, 0));
-        // Apply the translation to align the rotation point with the top-left edge of the box under it
-        // // Apply the sway rotation
-        // // Apply the translation to position the box correctly
-        // // model_transform=model_transform.times(Mat4.translation(0,2,0))X
-        // model_transform = model_transform.times(Mat4.translation(1, 0, 0));
-
-        // this.shapes.cube.draw(context, program_state, model_transform, this.materials.plastic.override({color: blue}));
-
-
-        return model_transform;
     }
 
     display(context, program_state) {
