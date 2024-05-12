@@ -1,4 +1,5 @@
 import { defs, tiny } from './examples/common.js';
+import { draw_table } from './table_model.js';
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene,
@@ -185,7 +186,8 @@ export class Assignment2 extends Base_Scene {
         let model_transform = Mat4.identity();
         // Example for drawing a cube, you can remove this line if needed
         // TODO:  Draw your entire scene here.  Use this.draw_box( graphics_state, model_transform ) to call your helper.
-        this.draw_table(context, program_state, model_transform.times(Mat4.translation(0,10,0)))
+        // this.draw_table(context, program_state, model_transform.times(Mat4.translation(0,10,0)))
+        draw_table(this,context, program_state, model_transform.times(Mat4.translation(0,10,0)))
 
     }
 }
