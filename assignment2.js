@@ -229,15 +229,11 @@ class Base_Scene extends Scene {
   }
 
   display(context, program_state) {
-    // display():  Called once per frame of animation. Here, the base class's display only does
-    // some initial setup.
-
-    // Setup -- This part sets up the scene's overall camera matrix, projection matrix, and lights:
     if (!context.scratchpad.controls) {
       this.children.push(
         (context.scratchpad.controls = new defs.Movement_Controls())
       );
-      // Define the global camera and projection matrices, which are stored in program_state.
+
       program_state.set_camera(Mat4.translation(0, -18, -40));
     }
     program_state.projection_transform = Mat4.perspective(
@@ -247,100 +243,101 @@ class Base_Scene extends Scene {
       100
     );
 
-    // *** Lights: *** Values of vector or point lights.
     const light_position = vec4(0, 5, 5, 1);
     program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
   }
 }
 
 export class Assignment2 extends Base_Scene {
-  /**
-   * This Scene object can be added to any display canvas.
-   * We isolate that code so it can be experimented with on its own.
-   * This gives you a very small code sandbox for editing a simple scene, and for
-   * experimenting with matrix transformations.
-   */
   constructor() {
     super();
-    this.sway = true;
-    this.sway_angle = 0;
-    this.n = 8;
-    this.colors = [];
-    for (let i = 0; i < this.n; i++) {
-      this.colors.push(color(Math.random(), Math.random(), Math.random(), 1.0));
-    }
+
     this.outline_visible = false;
-    // ... rest of the constructor code ...
-  }
-  set_colors() {
-    // TODO:  Create a class member variable to store your cube's colors.
-    // Hint:  You might need to create a member variable at somewhere to store the colors, using `this`.
-    // Hint2: You can consider add a constructor for class Assignment2, or add member variables in Base_Scene's constructor.
-    const colors = [];
-    for (let i = 0; i < this.n; i++) {
-      colors.push(color(Math.random(), Math.random(), Math.random(), 1.0));
-    }
-    this.colors = colors;
+    this.paddle1_transform = Mat4.identity()
+      .times(Mat4.translation(0, 11, 19))
+      .times(Mat4.scale(1, 0.25, 0.25));
+    this.paddle2_transform = Mat4.identity()
+      .times(Mat4.translation(0, 11, -19))
+      .times(Mat4.scale(1, 0.25, 0.25));
+    this.ball_transform = Mat4.identity()
+      .times(Mat4.translation(0, 11, 0))
+      .times(Mat4.scale(0.25, 0.25, 0.25));
+
+    this.left_wall = -10;
+    this.right_wall = 10;
+    this.back_wall = -20;
+    this.front_wall = 20;
+    this.ball_direction = Mat4.translation(0.2, 0, 1);
   }
 
   make_control_panel() {
-    // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-    this.key_triggered_button("Change Colors", ["c"], this.set_colors);
-    // Add a button for controlling the scene.
-    this.key_triggered_button("Outline", ["o"], () => {
-      // TODO:  Requirement 5b:  Set a flag here that will toggle your outline on and off
-      this.outline_visible = !this.outline_visible;
+    this.key_triggered_button("Move Right", ["e"], () => {
+      if (this.paddle1_transform[0][3] != 9)
+        this.paddle1_transform = this.paddle1_transform.times(
+          Mat4.translation(1, 0, 0)
+        );
     });
-    this.key_triggered_button("Sit still", ["m"], () => {
-      this.sway = !this.sway;
-      this.sway_angle = 0.05 * Math.PI;
+    this.key_triggered_button("Move Left", ["q"], () => {
+      if (this.paddle1_transform[0][3] != -9)
+        this.paddle1_transform = this.paddle1_transform.times(
+          Mat4.translation(-1, 0, 0)
+        );
     });
-  }
-
-  draw_table(context, program_state, model_transform) {
-    //TODO
-    // this.shapes.cube.draw(context,program_state,model_transform.times(Mat4.scale(10,1,20)),this.materials.plastic)
   }
 
   draw_ball(context, program_state) {
-    //TODO
-    let ball_transform = Mat4.identity()
-      .times(Mat4.translation(0, 11, 0))
-      .times(Mat4.scale(0.25, 0.25, 0.25));
+    if (
+      this.ball_transform[0][3] <= this.left_wall ||
+      this.ball_transform[0][3] >= this.right_wall
+    ) {
+      this.ball_direction[0][3] = this.ball_direction[0][3] * -1;
+    }
+    if (
+      this.ball_transform[2][3] == this.back_wall ||
+      (this.ball_transform[0][3] <= this.paddle1_transform[0][3] + 1 &&
+        this.ball_transform[0][3] >= this.paddle1_transform[0][3] - 1 &&
+        this.ball_transform[2][3] >= this.paddle1_transform[2][3])
+    ) {
+      this.ball_direction[2][3] = this.ball_direction[2][3] * -1;
+    }
+    if (this.ball_transform[2][3] == this.front_wall) {
+      this.ball_transform = Mat4.identity()
+        .times(Mat4.translation(0, 11, 0))
+        .times(Mat4.scale(0.25, 0.25, 0.25));
+      this.ball_direction = Mat4.translation(0.2, 0, 1);
+    } else this.ball_transform = this.ball_transform.times(this.ball_direction);
+
     this.shapes.ball.draw(
       context,
       program_state,
-      ball_transform,
+      this.ball_transform,
       this.materials.plastic
     );
   }
 
   draw_paddle(context, program_state) {
-    let paddle1_transform = Mat4.identity()
-      .times(Mat4.translation(0, 11, -19))
-      .times(Mat4.scale(1, 0.25, 0.25));
-    let paddle2_transform = Mat4.identity()
-      .times(Mat4.translation(0, 11, 19))
-      .times(Mat4.scale(1, 0.25, 0.25));
+    if (this.paddle2_transform[0][3] < -9) this.paddle2_transform[0][3] = -9;
+    else if (this.paddle2_transform[0][3] > 9)
+      this.paddle2_transform[0][3] = 9;
+    else this.paddle2_transform[0][3] = this.ball_transform[0][3];
     this.shapes.cube.draw(
       context,
       program_state,
-      paddle1_transform,
+      this.paddle1_transform,
       this.materials.plastic
     );
     this.shapes.cube.draw(
-        context,
-        program_state,
-        paddle2_transform,
-        this.materials.plastic
-      );
+      context,
+      program_state,
+      this.paddle2_transform,
+      this.materials.plastic
+    );
   }
 
   display(context, program_state) {
     super.display(context, program_state);
     let model_transform = Mat4.identity();
-    // Example for drawing a cube, you can remove this line if needed
-    // TODO:  Draw your entire scene here.  Use this.draw_box( graphics_state, model_transform ) to call your helper.
+
     draw_table(
       this,
       context,
