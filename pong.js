@@ -257,7 +257,7 @@ class Base_Scene extends Scene {
   }
 }
 
-export class Assignment2 extends Base_Scene {
+export class Pong extends Base_Scene {
   constructor() {
     super();
 
@@ -282,20 +282,15 @@ export class Assignment2 extends Base_Scene {
     this.ball_color = color(1, 0, 0, 1);
     this.player1_score = 0;
     this.player2_score = 0;
+    this.ball_speed = 1;
   }
 
   make_control_panel() {
-    this.key_triggered_button("Move Right", ["e"], () => {
-      if (this.paddle1_transform[0][3] != 9)
-        this.paddle1_transform = this.paddle1_transform.times(
-          Mat4.translation(1, 0, 0)
-        );
+    this.key_triggered_button("- Ball Speed", ["q"], () => {
+      if (this.ball_speed > 0.4) this.ball_speed -= 0.2;
     });
-    this.key_triggered_button("Move Left", ["q"], () => {
-      if (this.paddle1_transform[0][3] != -9)
-        this.paddle1_transform = this.paddle1_transform.times(
-          Mat4.translation(-1, 0, 0)
-        );
+    this.key_triggered_button("+ Ball Speed", ["e"], () => {
+      this.ball_speed += 0.2;
     });
     this.key_triggered_button("Start Game", ["Enter"], () => {
       this.start_game();
@@ -308,7 +303,7 @@ export class Assignment2 extends Base_Scene {
       this.ball_transform[0][3] <= this.left_wall ||
       this.ball_transform[0][3] >= this.right_wall
     ) {
-      this.ball_direction[0][3] = this.ball_direction[0][3] * -1;
+      this.ball_direction[0][3] = this.ball_direction[0][3  ] * -1;
     }
     // collision with paddles
     if (
@@ -328,14 +323,7 @@ export class Assignment2 extends Base_Scene {
     ) {
       if (this.ball_transform[2][3] >= this.front_wall) this.player2_score++;
       else this.player1_score++;
-      // reset ball position
-      this.ball_transform = Mat4.identity()
-        .times(Mat4.translation(0, 11, 0))
-        .times(Mat4.scale(0.25, 0.25, 0.25));
-      // reset ball movement
-      this.ball_direction = Mat4.translation(0, 0, 0);
-      // reset ball color
-      this.ball_color = color(1, 0, 0, 1);
+
       // restart game
       this.start_game();
     } else this.ball_transform = this.ball_transform.times(this.ball_direction);
@@ -380,6 +368,14 @@ export class Assignment2 extends Base_Scene {
   }
 
   start_game() {
+    // reset ball color
+    this.ball_color = color(1, 0, 0, 1);
+    // reset ball movement
+    this.ball_direction = Mat4.translation(0, 0, 0);
+    // reset ball position
+    this.ball_transform = Mat4.identity()
+      .times(Mat4.translation(0, 11, 0))
+      .times(Mat4.scale(0.25, 0.25, 0.25));
     // countdown before game start by changing color of ball
     setTimeout(() => {
       this.ball_color = color(1, 1, 0, 1);
@@ -390,7 +386,7 @@ export class Assignment2 extends Base_Scene {
           this.ball_direction = Mat4.translation(
             Math.random() * 2 - 1,
             0,
-            Math.random() < 0.5 ? 1 : -1
+            Math.random() < 0.5 ? this.ball_speed : -this.ball_speed
           );
         }, 800);
       }, 800);
@@ -432,6 +428,11 @@ export class Assignment2 extends Base_Scene {
         this.player2_score.toString(),
       context.context
     );
-    this.shapes.text.draw(context, program_state, scoreboard, this.materials.text);
+    this.shapes.text.draw(
+      context,
+      program_state,
+      scoreboard,
+      this.materials.text
+    );
   }
 }
