@@ -217,6 +217,7 @@ class Base_Scene extends Scene {
       strip: new Cube_Single_Strip(),
       ball: new defs.Subdivision_Sphere(4),
       text: new Text_Line(35),
+      box: new defs.Cube(),
     };
 
     // *** Materials
@@ -226,6 +227,27 @@ class Base_Scene extends Scene {
         diffusivity: 0.6,
         color: hex_color("#ffffff"),
       }),
+      side: new Material(new defs.Phong_Shader(), { ambient: 1, diffusivity: 1, color: color(1, 1, 1, 1) }),
+      floor: new Material(new defs.Textured_Phong(1),
+        {
+          ambient: 0.7, diffusivity: 1,
+          texture: new Texture("assets/fur.png")
+        }),
+      marble: new Material(new defs.Textured_Phong(1),
+        {
+          ambient: 0.7, diffusivity: 0.7,
+          texture: new Texture("assets/marble.png")
+        }),
+      wood: new Material(new defs.Textured_Phong(1),
+        {
+          ambient: 0.7, diffusivity: 0.7,
+          texture: new Texture("assets/wood.png")
+        }),
+      metal: new Material(new defs.Textured_Phong(1),
+        {
+          ambient: 0.7, diffusivity: 0.7,
+          texture: new Texture("assets/metal.png")
+        }),
       text: new Material(new defs.Textured_Phong(1), {
         ambient: 1,
         diffusivity: 0,
@@ -303,7 +325,7 @@ export class Pong extends Base_Scene {
       this.ball_transform[0][3] <= this.left_wall ||
       this.ball_transform[0][3] >= this.right_wall
     ) {
-      this.ball_direction[0][3] = this.ball_direction[0][3  ] * -1;
+      this.ball_direction[0][3] = this.ball_direction[0][3] * -1;
     }
     // collision with paddles
     if (
@@ -342,17 +364,17 @@ export class Pong extends Base_Scene {
     else if (this.move_paddle2)
       this.paddle2_transform[0][3] = this.ball_transform[0][3];
 
-    this.shapes.cube.draw(
+    this.shapes.box.draw(
       context,
       program_state,
       this.paddle1_transform,
-      this.materials.plastic
+      this.materials.wood
     );
-    this.shapes.cube.draw(
+    this.shapes.box.draw(
       context,
       program_state,
       this.paddle2_transform,
-      this.materials.plastic
+      this.materials.wood
     );
   }
 
@@ -365,6 +387,26 @@ export class Pong extends Base_Scene {
     } else if (e.offsetX <= 540)
       if (e.offsetX < 230) this.paddle1_transform[0][3] = (540 - 230) / -35;
       else this.paddle1_transform[0][3] = (540 - e.offsetX) / -35;
+  }
+
+
+  drawRoom() {
+    /* floor */
+    //this.shapes.box.draw(context, program_state, Mat4.scale(10, 0.5, 10).times(Mat4.translation(0, -4, 0)), this.materials.tex)
+    /* z- wall */
+    this.shapes.box.draw(context, program_state, Mat4.scale(16, 8, 1).times(Mat4.translation(0, 0.5, -10)), this.materials.phong)
+    /* x+ wall */
+    this.shapes.box.draw(context, program_state, Mat4.scale(1, 8, 16).times(Mat4.translation(10, 0.5, 0)), this.materials.phong)
+    /* x- wall */
+    this.shapes.box.draw(context, program_state, Mat4.scale(1, 8, 16).times(Mat4.translation(-10, 0.5, 0)), this.materials.phong)
+    //barrels
+    this.shapes.box.draw(context, program_state, Mat4.scale(2, 0.25, 1.25).times(Mat4.translation(2.75, 25, -6)), this.materials.test2)
+    this.shapes.barrel.draw(context, program_state, Mat4.scale(2.5, 1.25, 1.25).times(Mat4.translation(2.0, 6, -6)).times(Mat4.rotation(Math.PI / 2, 0, 1, 0)), this.materials.barrel);
+
+    this.shapes.box.draw(context, program_state, Mat4.scale(2, 0.25, 1.25).times(Mat4.translation(-2.75, 25, -6)), this.materials.test2);
+    this.shapes.barrel.draw(context, program_state, Mat4.scale(2.5, 1.25, 1.25).times(Mat4.translation(-2.0, 6, -6)).times(Mat4.rotation(-1 * Math.PI / 2, 0, 1, 0)), this.materials.barrel);
+    //ceiling
+    this.shapes.box.draw(context, program_state, Mat4.scale(10, 0.5, 10).times(Mat4.translation(0, 21, 0)), this.materials.floor);
   }
 
   start_game() {
@@ -423,9 +465,9 @@ export class Pong extends Base_Scene {
     let scoreboard = Mat4.identity().times(Mat4.translation(-15, 30, -30));
     this.shapes.text.set_string(
       "Player 1: " +
-        this.player1_score.toString() +
-        "  Player 2: " +
-        this.player2_score.toString(),
+      this.player1_score.toString() +
+      "  Player 2: " +
+      this.player2_score.toString(),
       context.context
     );
     this.shapes.text.draw(
