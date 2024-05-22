@@ -235,12 +235,17 @@ class Base_Scene extends Scene {
         }),
       marble: new Material(new defs.Textured_Phong(1),
         {
-          ambient: 0.7, diffusivity: 0.7,
+          ambient: 0.7, diffusivity: 0.5,specularity:0.2,
           texture: new Texture("assets/marble.png")
         }),
       wood: new Material(new defs.Textured_Phong(1),
         {
           ambient: 0.7, diffusivity: 0.7,
+          texture: new Texture("assets/wood.png")
+        }),
+      paddle: new Material(new defs.Textured_Phong(1),
+        {
+          ambient: 1, diffusivity: 0.9,specularity:1, 
           texture: new Texture("assets/wood.png")
         }),
       metal: new Material(new defs.Textured_Phong(1),
@@ -274,7 +279,7 @@ class Base_Scene extends Scene {
       100
     );
 
-    const light_position = vec4(0, 5, 5, 1);
+    const light_position = vec4(0, 15, 0, 1);
     program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
   }
 }
@@ -368,13 +373,13 @@ export class Pong extends Base_Scene {
       context,
       program_state,
       this.paddle1_transform,
-      this.materials.wood
+      this.materials.paddle
     );
     this.shapes.box.draw(
       context,
       program_state,
       this.paddle2_transform,
-      this.materials.wood
+      this.materials.paddle
     );
   }
 
