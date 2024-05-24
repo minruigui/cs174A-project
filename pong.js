@@ -2,6 +2,16 @@ import { defs, tiny } from "./examples/common.js";
 import { draw_table } from "./table_model.js";
 import { Text_Line } from "./examples/text-demo.js";
 
+// Create audio element
+const audioFiles = ["./assets/HitSound.m4a", "./assets/HitSound2.m4a"];
+const audioElements = audioFiles.map((src, index) => {
+  const audio = document.createElement("audio");
+  audio.src = src;
+  audio.id = `audio${index}`;
+  document.body.appendChild(audio);
+  return audio;
+});
+
 const {
   Vector,
   Vector3,
@@ -227,32 +237,38 @@ class Base_Scene extends Scene {
         diffusivity: 0.6,
         color: hex_color("#ffffff"),
       }),
-      side: new Material(new defs.Phong_Shader(), { ambient: 1, diffusivity: 1, color: color(1, 1, 1, 1) }),
-      floor: new Material(new defs.Textured_Phong(1),
-        {
-          ambient: 0.7, diffusivity: 1,
-          texture: new Texture("assets/fur.png")
-        }),
-      marble: new Material(new defs.Textured_Phong(1),
-        {
-          ambient: 0.7, diffusivity: 0.5,specularity:0.2,
-          texture: new Texture("assets/marble.png")
-        }),
-      wood: new Material(new defs.Textured_Phong(1),
-        {
-          ambient: 0.7, diffusivity: 0.7,
-          texture: new Texture("assets/wood.png")
-        }),
-      paddle: new Material(new defs.Textured_Phong(1),
-        {
-          ambient: 1, diffusivity: 0.9,specularity:1, 
-          texture: new Texture("assets/wood.png")
-        }),
-      metal: new Material(new defs.Textured_Phong(1),
-        {
-          ambient: 0.7, diffusivity: 0.7,
-          texture: new Texture("assets/metal.png")
-        }),
+      side: new Material(new defs.Phong_Shader(), {
+        ambient: 1,
+        diffusivity: 1,
+        color: color(1, 1, 1, 1),
+      }),
+      floor: new Material(new defs.Textured_Phong(1), {
+        ambient: 0.7,
+        diffusivity: 1,
+        texture: new Texture("assets/fur.png"),
+      }),
+      marble: new Material(new defs.Textured_Phong(1), {
+        ambient: 0.7,
+        diffusivity: 0.5,
+        specularity: 0.2,
+        texture: new Texture("assets/marble.png"),
+      }),
+      wood: new Material(new defs.Textured_Phong(1), {
+        ambient: 0.7,
+        diffusivity: 0.7,
+        texture: new Texture("assets/wood.png"),
+      }),
+      paddle: new Material(new defs.Textured_Phong(1), {
+        ambient: 1,
+        diffusivity: 0.9,
+        specularity: 1,
+        texture: new Texture("assets/wood.png"),
+      }),
+      metal: new Material(new defs.Textured_Phong(1), {
+        ambient: 0.7,
+        diffusivity: 0.7,
+        texture: new Texture("assets/metal.png"),
+      }),
       text: new Material(new defs.Textured_Phong(1), {
         ambient: 1,
         diffusivity: 0,
@@ -306,21 +322,37 @@ export class Pong extends Base_Scene {
     this.back_wall = -20;
     this.front_wall = 20;
     this.ball_direction = Mat4.translation(0, 0, 0);
+    this.ball_zdirection = 1; // used to see which z direction ball is going
     this.ball_color = color(1, 0, 0, 1);
     this.player1_score = 0;
     this.player2_score = 0;
     this.ball_speed = 1;
+    this.user_set_ball_speed = this.ball_speed;
+    this.game_started = false;
+    this.difficulty = 0.3;
   }
 
   make_control_panel() {
     this.key_triggered_button("- Ball Speed", ["q"], () => {
-      if (this.ball_speed > 0.4) this.ball_speed -= 0.2;
+      if (this.user_set_ball_speed > 0.4) this.user_set_ball_speed -= 0.2;
     });
     this.key_triggered_button("+ Ball Speed", ["e"], () => {
-      this.ball_speed += 0.2;
+      this.user_set_ball_speed += 0.2;
     });
     this.key_triggered_button("Start Game", ["Enter"], () => {
-      this.start_game();
+      if (!this.game_started) this.start_game();
+    });
+    this.key_triggered_button("Pause Game", ["p"], () => {
+      if (this.game_started) {
+        this.pause_game();
+        this.game_started = false;
+      }
+    });
+    this.key_triggered_button("- Difficulty", ["z"], () => {
+      if (this.difficulty < 0.3) this.difficulty = this.difficulty + 0.1;
+    });
+    this.key_triggered_button("+ Difficulty", ["x"], () => {
+      if (this.difficulty > 0) this.difficulty = this.difficulty - 0.1;
     });
   }
 
@@ -331,6 +363,10 @@ export class Pong extends Base_Scene {
       this.ball_transform[0][3] >= this.right_wall
     ) {
       this.ball_direction[0][3] = this.ball_direction[0][3] * -1;
+
+      audioElements[1].play().catch((error) => {
+        console.error("Error playing audio:", error);
+      });
     }
     // collision with paddles
     if (
@@ -341,7 +377,15 @@ export class Pong extends Base_Scene {
         this.ball_transform[0][3] >= this.paddle2_transform[0][3] - 1 &&
         this.ball_transform[2][3] <= this.paddle2_transform[2][3])
     ) {
-      this.ball_direction[2][3] = this.ball_direction[2][3] * -1;
+      // increase ball speed on every hit
+      this.ball_speed +=  0.02;
+      console.log(this.ball_speed)
+      this.ball_zdirection *= -1;
+      this.ball_direction[2][3] = this.ball_speed * this.ball_zdirection;
+
+      audioElements[0].play().catch((error) => {
+        console.error("Error playing audio:", error);
+      });
     }
     // collision with front and back walls
     if (
@@ -350,6 +394,10 @@ export class Pong extends Base_Scene {
     ) {
       if (this.ball_transform[2][3] >= this.front_wall) this.player2_score++;
       else this.player1_score++;
+
+      audioElements[1].play().catch((error) => {
+        console.error("Error playing audio:", error);
+      });
 
       // restart game
       this.start_game();
@@ -394,27 +442,83 @@ export class Pong extends Base_Scene {
       else this.paddle1_transform[0][3] = (540 - e.offsetX) / -35;
   }
 
-
   drawRoom() {
     /* floor */
     //this.shapes.box.draw(context, program_state, Mat4.scale(10, 0.5, 10).times(Mat4.translation(0, -4, 0)), this.materials.tex)
     /* z- wall */
-    this.shapes.box.draw(context, program_state, Mat4.scale(16, 8, 1).times(Mat4.translation(0, 0.5, -10)), this.materials.phong)
+    this.shapes.box.draw(
+      context,
+      program_state,
+      Mat4.scale(16, 8, 1).times(Mat4.translation(0, 0.5, -10)),
+      this.materials.phong
+    );
     /* x+ wall */
-    this.shapes.box.draw(context, program_state, Mat4.scale(1, 8, 16).times(Mat4.translation(10, 0.5, 0)), this.materials.phong)
+    this.shapes.box.draw(
+      context,
+      program_state,
+      Mat4.scale(1, 8, 16).times(Mat4.translation(10, 0.5, 0)),
+      this.materials.phong
+    );
     /* x- wall */
-    this.shapes.box.draw(context, program_state, Mat4.scale(1, 8, 16).times(Mat4.translation(-10, 0.5, 0)), this.materials.phong)
+    this.shapes.box.draw(
+      context,
+      program_state,
+      Mat4.scale(1, 8, 16).times(Mat4.translation(-10, 0.5, 0)),
+      this.materials.phong
+    );
     //barrels
-    this.shapes.box.draw(context, program_state, Mat4.scale(2, 0.25, 1.25).times(Mat4.translation(2.75, 25, -6)), this.materials.test2)
-    this.shapes.barrel.draw(context, program_state, Mat4.scale(2.5, 1.25, 1.25).times(Mat4.translation(2.0, 6, -6)).times(Mat4.rotation(Math.PI / 2, 0, 1, 0)), this.materials.barrel);
+    this.shapes.box.draw(
+      context,
+      program_state,
+      Mat4.scale(2, 0.25, 1.25).times(Mat4.translation(2.75, 25, -6)),
+      this.materials.test2
+    );
+    this.shapes.barrel.draw(
+      context,
+      program_state,
+      Mat4.scale(2.5, 1.25, 1.25)
+        .times(Mat4.translation(2.0, 6, -6))
+        .times(Mat4.rotation(Math.PI / 2, 0, 1, 0)),
+      this.materials.barrel
+    );
 
-    this.shapes.box.draw(context, program_state, Mat4.scale(2, 0.25, 1.25).times(Mat4.translation(-2.75, 25, -6)), this.materials.test2);
-    this.shapes.barrel.draw(context, program_state, Mat4.scale(2.5, 1.25, 1.25).times(Mat4.translation(-2.0, 6, -6)).times(Mat4.rotation(-1 * Math.PI / 2, 0, 1, 0)), this.materials.barrel);
+    this.shapes.box.draw(
+      context,
+      program_state,
+      Mat4.scale(2, 0.25, 1.25).times(Mat4.translation(-2.75, 25, -6)),
+      this.materials.test2
+    );
+    this.shapes.barrel.draw(
+      context,
+      program_state,
+      Mat4.scale(2.5, 1.25, 1.25)
+        .times(Mat4.translation(-2.0, 6, -6))
+        .times(Mat4.rotation((-1 * Math.PI) / 2, 0, 1, 0)),
+      this.materials.barrel
+    );
     //ceiling
-    this.shapes.box.draw(context, program_state, Mat4.scale(10, 0.5, 10).times(Mat4.translation(0, 21, 0)), this.materials.floor);
+    this.shapes.box.draw(
+      context,
+      program_state,
+      Mat4.scale(10, 0.5, 10).times(Mat4.translation(0, 21, 0)),
+      this.materials.floor
+    );
+  }
+
+  pause_game() {
+    // reset ball color
+    this.ball_color = color(1, 0, 0, 1);
+    // reset ball movement
+    this.ball_direction = Mat4.translation(0, 0, 0);
+    // reset ball position
+    this.ball_transform = Mat4.identity()
+      .times(Mat4.translation(0, 11, 0))
+      .times(Mat4.scale(0.25, 0.25, 0.25));
   }
 
   start_game() {
+    this.ball_speed = this.user_set_ball_speed;
+    this.game_started = true;
     // reset ball color
     this.ball_color = color(1, 0, 0, 1);
     // reset ball movement
@@ -433,7 +537,7 @@ export class Pong extends Base_Scene {
           this.ball_direction = Mat4.translation(
             Math.random() * 2 - 1,
             0,
-            Math.random() < 0.5 ? this.ball_speed : -this.ball_speed
+            Math.random() < 0.5 ? this.user_set_ball_speed : -this.user_set_ball_speed
           );
         }, 800);
       }, 800);
@@ -448,7 +552,7 @@ export class Pong extends Base_Scene {
     // every 2 seconds, perform a coin flip to determine if opponent tracks ball
     if (t - this.last_prediction_time >= 2) {
       this.last_prediction_time = t;
-      let coin_flip = Math.random() < 0.3 ? 1 : 0;
+      let coin_flip = Math.random() < this.difficulty ? 1 : 0;
       if (coin_flip == 1) this.move_paddle2 = false;
       else this.move_paddle2 = true;
     }
@@ -470,15 +574,50 @@ export class Pong extends Base_Scene {
     let scoreboard = Mat4.identity().times(Mat4.translation(-15, 30, -30));
     this.shapes.text.set_string(
       "Player 1: " +
-      this.player1_score.toString() +
-      "  Player 2: " +
-      this.player2_score.toString(),
+        this.player1_score.toString() +
+        "  Player 2: " +
+        this.player2_score.toString(),
       context.context
     );
     this.shapes.text.draw(
       context,
       program_state,
       scoreboard,
+      this.materials.text
+    );
+
+    // Display difficulty
+    let difficulty = Mat4.identity().times(Mat4.translation(-15, 20, -30));
+    let current_difficulty =
+      this.difficulty <= 0
+        ? "Impossible"
+        : this.difficulty <= 0.1
+        ? "Hard"
+        : this.difficulty <= 0.2
+        ? "Medium"
+        : "Easy";
+    this.shapes.text.set_string(
+      "Difficulty: " + current_difficulty,
+      context.context
+    );
+    this.shapes.text.draw(
+      context,
+      program_state,
+      difficulty,
+      this.materials.text
+    );
+
+    // display ball speed
+    let ball_speed = Mat4.identity().times(Mat4.translation(-15, 15, -30));
+    let displayed_speed = this.game_started ? this.ball_speed.toFixed(1): this.user_set_ball_speed.toFixed(1)
+    this.shapes.text.set_string(
+      "Ball Speed: " + displayed_speed,
+      context.context
+    );
+    this.shapes.text.draw(
+      context,
+      program_state,
+      ball_speed,
       this.materials.text
     );
   }
