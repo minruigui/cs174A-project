@@ -1,5 +1,5 @@
 import { defs, tiny } from "./examples/common.js";
-import { draw_table } from "./table_model.js";
+import { draw_table,draw_room } from "./table_model.js";
 import { Text_Line } from "./examples/text-demo.js";
 
 // Create audio element
@@ -245,7 +245,7 @@ class Base_Scene extends Scene {
       floor: new Material(new defs.Textured_Phong(1), {
         ambient: 0.7,
         diffusivity: 1,
-        texture: new Texture("assets/fur.png"),
+        texture: new Texture("assets/floor.png"),
       }),
       marble: new Material(new defs.Textured_Phong(1), {
         ambient: 0.7,
@@ -269,6 +269,17 @@ class Base_Scene extends Scene {
         diffusivity: 0.7,
         texture: new Texture("assets/metal.png"),
       }),
+      sky: new Material(new defs.Textured_Phong(1), {
+        ambient: 0.7,
+        diffusivity: 0.7,
+        texture: new Texture("assets/sky.png"),
+      }),
+      wall: new Material(new defs.Phong_Shader(), {
+        ambient: 0.4,
+        diffusivity: 0.6,
+        specularity:0,
+        color: hex_color("#ffffff"),
+      }),
       text: new Material(new defs.Textured_Phong(1), {
         ambient: 1,
         diffusivity: 0,
@@ -286,13 +297,13 @@ class Base_Scene extends Scene {
         (context.scratchpad.controls = new defs.Movement_Controls())
       );
 
-      program_state.set_camera(Mat4.translation(0, -18, -40));
+      program_state.set_camera(Mat4.translation(0, -18, -45));
     }
     program_state.projection_transform = Mat4.perspective(
       Math.PI / 4,
       context.width / context.height,
       1,
-      100
+      200
     );
 
     const light_position = vec4(0, 15, 0, 1);
@@ -562,6 +573,12 @@ export class Pong extends Base_Scene {
       this.move_paddle(e);
     });
     draw_table(
+      this,
+      context,
+      program_state,
+      model_transform.times(Mat4.translation(0, 10, 0))
+    );
+    draw_room(
       this,
       context,
       program_state,
