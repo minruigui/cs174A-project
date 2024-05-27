@@ -315,23 +315,14 @@ export class Pong extends Base_Scene {
   constructor() {
     super();
 
-    this.outline_visible = false;
-    this.paddle1_transform = Mat4.identity()
-      .times(Mat4.translation(0, 11, 19))
-      .times(Mat4.scale(1, 0.25, 0.25));
-    this.paddle2_transform = Mat4.identity()
-      .times(Mat4.translation(0, 11, -19))
-      .times(Mat4.scale(1, 0.25, 0.25));
-    this.ball_transform = Mat4.identity()
-      .times(Mat4.translation(0, 11, 0))
-      .times(Mat4.scale(0.25, 0.25, 0.25));
-
     this.last_prediction_time = 0;
+    this.paddle1_width = 2;
     this.move_paddle2 = true;
-    this.left_wall = -10;
-    this.right_wall = 10;
-    this.back_wall = -20;
-    this.front_wall = 20;
+    this.ball_radius = 0.25;
+    this.left_wall = -10.1;
+    this.right_wall = 10.1;
+    this.back_wall = -20.1;
+    this.front_wall = 20.1;
     this.ball_direction = Mat4.translation(0, 0, 0);
     this.ball_zdirection = 1; // used to see which z direction ball is going
     this.ball_color = color(1, 0, 0, 1);
@@ -341,6 +332,31 @@ export class Pong extends Base_Scene {
     this.user_set_ball_speed = this.ball_speed;
     this.game_started = false;
     this.difficulty = 0.3;
+    this.powerup = {
+      id: 1,
+      transform: Mat4.identity()
+        .times(
+          Mat4.translation(
+            Math.floor(Math.random() * 19) - 9,
+            11,
+            Math.floor(Math.random() * 13) - 6
+          )
+        )
+        .times(Mat4.scale(0.75, 0.75, 0.75)),
+      last_powerup_spawned: 0,
+      powerup_list: [1],
+      radius: 0.75,
+    };
+
+    this.paddle1_transform = Mat4.identity()
+      .times(Mat4.translation(0, 11, 19))
+      .times(Mat4.scale(this.paddle1_width / 2, 0.25, 0.25));
+    this.paddle2_transform = Mat4.identity()
+      .times(Mat4.translation(0, 11, -19))
+      .times(Mat4.scale(1, 0.25, 0.25));
+    this.ball_transform = Mat4.identity()
+      .times(Mat4.translation(0, 11, 0))
+      .times(Mat4.scale(this.ball_radius, this.ball_radius, this.ball_radius));
   }
 
   make_control_panel() {
@@ -370,8 +386,8 @@ export class Pong extends Base_Scene {
   draw_ball(context, program_state) {
     // collision with left and right wall
     if (
-      this.ball_transform[0][3] <= this.left_wall ||
-      this.ball_transform[0][3] >= this.right_wall
+      this.ball_transform[0][3] <= this.left_wall + 0.35 ||
+      this.ball_transform[0][3] >= this.right_wall - 0.35
     ) {
       this.ball_direction[0][3] = this.ball_direction[0][3] * -1;
 
@@ -379,18 +395,21 @@ export class Pong extends Base_Scene {
         console.error("Error playing audio:", error);
       });
     }
-    // collision with paddles
+    // ball collision with paddles
     if (
-      (this.ball_transform[0][3] <= this.paddle1_transform[0][3] + 1 &&
-        this.ball_transform[0][3] >= this.paddle1_transform[0][3] - 1 &&
-        this.ball_transform[2][3] >= this.paddle1_transform[2][3]) ||
+      // Collision with player 1 paddle
+      (this.ball_transform[0][3] <=
+        this.paddle1_transform[0][3] + this.paddle1_width / 2 &&
+        this.ball_transform[0][3] >=
+          this.paddle1_transform[0][3] - this.paddle1_width / 2 &&
+        this.ball_transform[2][3] >= this.paddle1_transform[2][3] - 0.5) ||
+      // collision with player 2 paddle
       (this.ball_transform[0][3] <= this.paddle2_transform[0][3] + 1 &&
         this.ball_transform[0][3] >= this.paddle2_transform[0][3] - 1 &&
-        this.ball_transform[2][3] <= this.paddle2_transform[2][3])
+        this.ball_transform[2][3] <= this.paddle2_transform[2][3] + 0.5)
     ) {
       // increase ball speed on every hit
-      this.ball_speed +=  0.02;
-      console.log(this.ball_speed)
+      this.ball_speed += 0.02;
       this.ball_zdirection *= -1;
       this.ball_direction[2][3] = this.ball_speed * this.ball_zdirection;
 
@@ -400,8 +419,8 @@ export class Pong extends Base_Scene {
     }
     // collision with front and back walls
     if (
-      this.ball_transform[2][3] >= this.front_wall ||
-      this.ball_transform[2][3] <= this.back_wall
+      this.ball_transform[2][3] >= this.front_wall - 0.35 ||
+      this.ball_transform[2][3] <= this.back_wall + 0.35
     ) {
       if (this.ball_transform[2][3] >= this.front_wall) this.player2_score++;
       else this.player1_score++;
@@ -446,10 +465,18 @@ export class Pong extends Base_Scene {
   move_paddle(e) {
     // 1080 x 600 is default window size defined by tinygraphics
     if (e.offsetX >= 540 && e.offsetX <= 1080) {
-      if (e.offsetX > 850) this.paddle1_transform[0][3] = (850 - 540) / 35;
+      if (
+        e.offsetX > 850 ||
+        this.paddle1_transform[0][3] > this.right_wall - this.paddle1_width / 2
+      )
+        this.paddle1_transform[0][3] = this.right_wall - this.paddle1_width / 2;
       else this.paddle1_transform[0][3] = (e.offsetX - 540) / 35;
-    } else if (e.offsetX <= 540)
-      if (e.offsetX < 230) this.paddle1_transform[0][3] = (540 - 230) / -35;
+    } else if (
+      e.offsetX <= 540 ||
+      this.paddle1_transform[0][3] > this.left_wall + this.paddle1_width / 2
+    )
+      if (e.offsetX < 230)
+        this.paddle1_transform[0][3] = this.left_wall + this.paddle1_width / 2;
       else this.paddle1_transform[0][3] = (540 - e.offsetX) / -35;
   }
 
@@ -548,11 +575,48 @@ export class Pong extends Base_Scene {
           this.ball_direction = Mat4.translation(
             Math.random() * 2 - 1,
             0,
-            Math.random() < 0.5 ? this.user_set_ball_speed : -this.user_set_ball_speed
+            Math.random() < 0.5
+              ? this.user_set_ball_speed
+              : -this.user_set_ball_speed
           );
         }, 800);
       }, 800);
     }, 800);
+  }
+
+  spawn_random_powerup(context, program_state, t) {
+    let dx = this.ball_transform[0][3] - this.powerup.transform[0][3];
+    let dz = this.ball_transform[2][3] - this.powerup.transform[2][3];
+    let distance = Math.sqrt(dx * dx + dz * dz);
+    if (distance < this.ball_radius + this.powerup.radius) {
+      this.powerup.transform = Mat4.identity()
+        .times(Mat4.translation(100, 100, 100))
+        .times(Mat4.scale(0, 0, 0));
+
+      // paddle size increase for 10 seconds
+      if ((this.powerup.id = 1)) {
+        this.paddle1_width = 6;
+        this.paddle1_transform = Mat4.identity()
+          .times(Mat4.translation(0, 11, 19))
+          .times(Mat4.scale(this.paddle1_width / 2, 0.25, 0.25));
+        setTimeout(() => {
+          this.paddle1_width = 2;
+          this.paddle1_transform = Mat4.identity()
+            .times(Mat4.translation(0, 11, 19))
+            .times(Mat4.scale(this.paddle1_width / 2, 0.25, 0.25));
+          console.log(this.paddle1_width);
+        }, 10000);
+      }
+    }
+    this.powerup.transform = this.powerup.transform.times(
+      Mat4.rotation(1 / 50, 0, 1, 0)
+    );
+    this.shapes.box.draw(
+      context,
+      program_state,
+      this.powerup.transform,
+      this.materials.metal
+    );
   }
 
   display(context, program_state) {
@@ -560,6 +624,33 @@ export class Pong extends Base_Scene {
     let model_transform = Mat4.identity();
     let t = program_state.animation_time / 1000;
 
+    // spawn a powerup every 5 seconds
+    let elapsed_time = t - this.powerup.last_powerup_spawned;
+    if (this.game_started && elapsed_time <= 6) {
+      this.spawn_random_powerup(context, program_state, t);
+      if (elapsed_time > 5) {
+        this.powerup.last_powerup_spawned = t;
+        this.powerup.id =
+          this.powerup.powerup_list[
+            Math.floor(Math.random() * this.powerup.powerup_list.length)
+          ];
+        this.powerup.transform = Mat4.identity()
+          .times(
+            Mat4.translation(
+              Math.floor(Math.random() * 19) - 9,
+              11,
+              Math.floor(Math.random() * 13) - 6
+            )
+          )
+          .times(
+            Mat4.scale(
+              this.powerup.radius,
+              this.powerup.radius,
+              this.powerup.radius
+            )
+          );
+      }
+    }
     // every 2 seconds, perform a coin flip to determine if opponent tracks ball
     if (t - this.last_prediction_time >= 2) {
       this.last_prediction_time = t;
@@ -572,6 +663,7 @@ export class Pong extends Base_Scene {
       e.preventDefault();
       this.move_paddle(e);
     });
+
     draw_table(
       this,
       context,
@@ -626,7 +718,9 @@ export class Pong extends Base_Scene {
 
     // display ball speed
     let ball_speed = Mat4.identity().times(Mat4.translation(-15, 15, -30));
-    let displayed_speed = this.game_started ? this.ball_speed.toFixed(1): this.user_set_ball_speed.toFixed(1)
+    let displayed_speed = this.game_started
+      ? this.ball_speed.toFixed(1)
+      : this.user_set_ball_speed.toFixed(1);
     this.shapes.text.set_string(
       "Ball Speed: " + displayed_speed,
       context.context
