@@ -1,5 +1,5 @@
 import { defs, tiny } from "./examples/common.js";
-import { draw_table,draw_room } from "./table_model.js";
+import { draw_table, draw_room } from "./table_model.js";
 import { Text_Line } from "./examples/text-demo.js";
 
 // Create audio element
@@ -277,7 +277,7 @@ class Base_Scene extends Scene {
       wall: new Material(new defs.Phong_Shader(), {
         ambient: 0.4,
         diffusivity: 0.6,
-        specularity:0,
+        specularity: 0,
         color: hex_color("#ffffff"),
       }),
       text: new Material(new defs.Textured_Phong(1), {
@@ -329,9 +329,9 @@ export class Pong extends Base_Scene {
     this.player1_score = 0;
     this.player2_score = 0;
     this.ball_speed = 1;
-    this.user_set_ball_speed = this.ball_speed;
     this.game_started = false;
     this.difficulty = 0.3;
+    this.game_paused = false;
     this.powerup = {
       id: 1,
       transform: Mat4.identity()
@@ -344,9 +344,20 @@ export class Pong extends Base_Scene {
         )
         .times(Mat4.scale(0.75, 0.75, 0.75)),
       last_powerup_spawned: 0,
-      powerup_list: [1],
+      powerup_list: [1, 2],
       radius: 0.75,
+      current_running_id: null,
     };
+    this.balls = [
+      {
+        ball_transform: Mat4.identity()
+          .times(Mat4.translation(0, 11, 0))
+          .times(
+            Mat4.scale(this.ball_radius, this.ball_radius, this.ball_radius)
+          ),
+        ball_direction: Mat4.translation(0, 0, 0),
+      },
+    ];
 
     this.paddle1_transform = Mat4.identity()
       .times(Mat4.translation(0, 11, 19))
@@ -360,20 +371,11 @@ export class Pong extends Base_Scene {
   }
 
   make_control_panel() {
-    this.key_triggered_button("- Ball Speed", ["q"], () => {
-      if (this.user_set_ball_speed > 0.4) this.user_set_ball_speed -= 0.2;
-    });
-    this.key_triggered_button("+ Ball Speed", ["e"], () => {
-      this.user_set_ball_speed += 0.2;
-    });
     this.key_triggered_button("Start Game", ["Enter"], () => {
       if (!this.game_started) this.start_game();
     });
     this.key_triggered_button("Pause Game", ["p"], () => {
-      if (this.game_started) {
-        this.pause_game();
-        this.game_started = false;
-      }
+      this.pause_game();
     });
     this.key_triggered_button("- Difficulty", ["z"], () => {
       if (this.difficulty < 0.3) this.difficulty = this.difficulty + 0.1;
@@ -384,68 +386,78 @@ export class Pong extends Base_Scene {
   }
 
   draw_ball(context, program_state) {
-    // collision with left and right wall
-    if (
-      this.ball_transform[0][3] <= this.left_wall + 0.35 ||
-      this.ball_transform[0][3] >= this.right_wall - 0.35
-    ) {
-      this.ball_direction[0][3] = this.ball_direction[0][3] * -1;
+    this.balls.map((x, index) => {
+      // collision with left and right wall
+      if (
+        x.ball_transform[0][3] <= this.left_wall + 0.35 ||
+        x.ball_transform[0][3] >= this.right_wall - 0.35
+      ) {
+        x.ball_direction[0][3] = x.ball_direction[0][3] * -1;
 
-      audioElements[1].play().catch((error) => {
-        console.error("Error playing audio:", error);
-      });
-    }
-    // ball collision with paddles
-    if (
-      // Collision with player 1 paddle
-      (this.ball_transform[0][3] <=
-        this.paddle1_transform[0][3] + this.paddle1_width / 2 &&
-        this.ball_transform[0][3] >=
-          this.paddle1_transform[0][3] - this.paddle1_width / 2 &&
-        this.ball_transform[2][3] >= this.paddle1_transform[2][3] - 0.5) ||
-      // collision with player 2 paddle
-      (this.ball_transform[0][3] <= this.paddle2_transform[0][3] + 1 &&
-        this.ball_transform[0][3] >= this.paddle2_transform[0][3] - 1 &&
-        this.ball_transform[2][3] <= this.paddle2_transform[2][3] + 0.5)
-    ) {
-      // increase ball speed on every hit
-      this.ball_speed += 0.02;
-      this.ball_zdirection *= -1;
-      this.ball_direction[2][3] = this.ball_speed * this.ball_zdirection;
+        audioElements[1].play().catch((error) => {
+          console.error("Error playing audio:", error);
+        });
+      }
+      // ball collision with paddles
+      if (
+        // Collision with player 1 paddle
+        (x.ball_transform[0][3] <=
+          this.paddle1_transform[0][3] + this.paddle1_width / 2 &&
+          x.ball_transform[0][3] >=
+            this.paddle1_transform[0][3] - this.paddle1_width / 2 &&
+          x.ball_transform[2][3] >= this.paddle1_transform[2][3] - 0.5) ||
+        // collision with player 2 paddle
+        (x.ball_transform[0][3] <= this.paddle2_transform[0][3] + 1 &&
+          x.ball_transform[0][3] >= this.paddle2_transform[0][3] - 1 &&
+          x.ball_transform[2][3] <= this.paddle2_transform[2][3] + 0.5)
+      ) {
+        // increase ball speed on every hit
+        this.ball_speed += 0.02;
+        this.ball_zdirection *= -1;
+        x.ball_direction[2][3] = this.ball_speed * this.ball_zdirection;
 
-      audioElements[0].play().catch((error) => {
-        console.error("Error playing audio:", error);
-      });
-    }
-    // collision with front and back walls
-    if (
-      this.ball_transform[2][3] >= this.front_wall - 0.35 ||
-      this.ball_transform[2][3] <= this.back_wall + 0.35
-    ) {
-      if (this.ball_transform[2][3] >= this.front_wall) this.player2_score++;
-      else this.player1_score++;
+        audioElements[0].play().catch((error) => {
+          console.error("Error playing audio:", error);
+        });
+      }
+      // collision with front and back walls
+      if (
+        x.ball_transform[2][3] >= this.front_wall - 0.35 ||
+        x.ball_transform[2][3] <= this.back_wall + 0.35
+      ) {
+        if (x.ball_transform[2][3] >= this.front_wall - 0.35)
+          this.player2_score++;
+        else this.player1_score++;
 
-      audioElements[1].play().catch((error) => {
-        console.error("Error playing audio:", error);
-      });
+        audioElements[1].play().catch((error) => {
+          console.error("Error playing audio:", error);
+        });
 
-      // restart game
-      this.start_game();
-    } else this.ball_transform = this.ball_transform.times(this.ball_direction);
-
-    this.shapes.ball.draw(
-      context,
-      program_state,
-      this.ball_transform,
-      this.materials.plastic.override({ color: this.ball_color })
-    );
+        // restart game
+        if (index == 0) this.start_game();
+        else {
+          this.balls.splice(index, 1);
+        }
+      } else {
+        if (!this.game_paused)
+          x.ball_transform = x.ball_transform.times(x.ball_direction);
+        this.shapes.ball.draw(
+          context,
+          program_state,
+          x.ball_transform,
+          this.materials.plastic.override({
+            color: index == 0 ? this.ball_color : color(255, 0, 0, 1),
+          })
+        );
+      }
+    });
   }
 
   draw_paddle(context, program_state) {
     if (this.paddle2_transform[0][3] < -9) this.paddle2_transform[0][3] = -9;
     else if (this.paddle2_transform[0][3] > 9) this.paddle2_transform[0][3] = 9;
     else if (this.move_paddle2)
-      this.paddle2_transform[0][3] = this.ball_transform[0][3];
+      this.paddle2_transform[0][3] = this.balls[0].ball_transform[0][3];
 
     this.shapes.box.draw(
       context,
@@ -463,21 +475,22 @@ export class Pong extends Base_Scene {
 
   // tracks cursor position to move paddle
   move_paddle(e) {
-    // 1080 x 600 is default window size defined by tinygraphics
+    // 1080 x 600 is default window size defined by tinygraphics)
     if (e.offsetX >= 540 && e.offsetX <= 1080) {
       if (
-        e.offsetX > 850 ||
+        e.offsetX > 830 - (25 * this.paddle1_width) / 2 ||
         this.paddle1_transform[0][3] > this.right_wall - this.paddle1_width / 2
       )
         this.paddle1_transform[0][3] = this.right_wall - this.paddle1_width / 2;
-      else this.paddle1_transform[0][3] = (e.offsetX - 540) / 35;
+      else this.paddle1_transform[0][3] = (e.offsetX - 540) / 28;
     } else if (
       e.offsetX <= 540 ||
       this.paddle1_transform[0][3] > this.left_wall + this.paddle1_width / 2
-    )
-      if (e.offsetX < 230)
+    ) {
+      if (e.offsetX < 260 + (25 * this.paddle1_width) / 2)
         this.paddle1_transform[0][3] = this.left_wall + this.paddle1_width / 2;
-      else this.paddle1_transform[0][3] = (540 - e.offsetX) / -35;
+      else this.paddle1_transform[0][3] = (540 - e.offsetX) / -28;
+    }
   }
 
   drawRoom() {
@@ -544,25 +557,23 @@ export class Pong extends Base_Scene {
   }
 
   pause_game() {
-    // reset ball color
-    this.ball_color = color(1, 0, 0, 1);
-    // reset ball movement
-    this.ball_direction = Mat4.translation(0, 0, 0);
-    // reset ball position
-    this.ball_transform = Mat4.identity()
-      .times(Mat4.translation(0, 11, 0))
-      .times(Mat4.scale(0.25, 0.25, 0.25));
+    this.game_paused = !this.game_paused;
   }
 
   start_game() {
-    this.ball_speed = this.user_set_ball_speed;
     this.game_started = true;
+    // reset ball count
+    this.balls.splice(1);
+    // reset ball speed
+    this.ball_speed = 1;
+    // reset powerups
+    this.powerup.current_running_id = null;
     // reset ball color
     this.ball_color = color(1, 0, 0, 1);
     // reset ball movement
-    this.ball_direction = Mat4.translation(0, 0, 0);
+    this.balls[0].ball_direction = Mat4.translation(0, 0, 0);
     // reset ball position
-    this.ball_transform = Mat4.identity()
+    this.balls[0].ball_transform = Mat4.identity()
       .times(Mat4.translation(0, 11, 0))
       .times(Mat4.scale(0.25, 0.25, 0.25));
     // countdown before game start by changing color of ball
@@ -572,12 +583,10 @@ export class Pong extends Base_Scene {
         this.ball_color = color(0, 1, 0, 1);
         setTimeout(() => {
           this.ball_color = color(1, 1, 1, 1);
-          this.ball_direction = Mat4.translation(
+          this.balls[0].ball_direction = Mat4.translation(
             Math.random() * 2 - 1,
             0,
-            Math.random() < 0.5
-              ? this.user_set_ball_speed
-              : -this.user_set_ball_speed
+            Math.random() < 0.5 ? this.ball_speed : -this.ball_speed
           );
         }, 800);
       }, 800);
@@ -585,38 +594,66 @@ export class Pong extends Base_Scene {
   }
 
   spawn_random_powerup(context, program_state, t) {
-    let dx = this.ball_transform[0][3] - this.powerup.transform[0][3];
-    let dz = this.ball_transform[2][3] - this.powerup.transform[2][3];
-    let distance = Math.sqrt(dx * dx + dz * dz);
-    if (distance < this.ball_radius + this.powerup.radius) {
-      this.powerup.transform = Mat4.identity()
-        .times(Mat4.translation(100, 100, 100))
-        .times(Mat4.scale(0, 0, 0));
+    if (this.powerup.current_running_id == null) {
+      let dx =
+        this.balls[0].ball_transform[0][3] - this.powerup.transform[0][3];
+      let dz =
+        this.balls[0].ball_transform[2][3] - this.powerup.transform[2][3];
+      let distance = Math.sqrt(dx * dx + dz * dz);
+      // if collision detected
+      if (distance < this.ball_radius + this.powerup.radius) {
+        this.powerup.transform = Mat4.identity()
+          .times(Mat4.translation(100, 100, 100))
+          .times(Mat4.scale(0, 0, 0));
 
-      // paddle size increase for 10 seconds
-      if ((this.powerup.id = 1)) {
-        this.paddle1_width = 6;
-        this.paddle1_transform = Mat4.identity()
-          .times(Mat4.translation(0, 11, 19))
-          .times(Mat4.scale(this.paddle1_width / 2, 0.25, 0.25));
-        setTimeout(() => {
-          this.paddle1_width = 2;
+        // paddle size increase for 10 seconds
+        if (this.powerup.id == 1) {
+          this.paddle1_width = 6;
           this.paddle1_transform = Mat4.identity()
             .times(Mat4.translation(0, 11, 19))
             .times(Mat4.scale(this.paddle1_width / 2, 0.25, 0.25));
-          console.log(this.paddle1_width);
-        }, 10000);
+          clearTimeout(this.powerup.current_running_id);
+          this.powerup.current_running_id = setTimeout(() => {
+            this.powerup.current_running_id = null;
+            this.paddle1_width = 2;
+            this.paddle1_transform = Mat4.identity()
+              .times(Mat4.translation(0, 11, 19))
+              .times(Mat4.scale(this.paddle1_width / 2, 0.25, 0.25));
+            console.log(this.paddle1_width);
+          }, 10000);
+        } else if (this.powerup.id == 2) {
+          for (let i = 0; i < Math.floor(Math.random() * 10) + 1; i++)
+            this.balls.push({
+              ball_transform: Mat4.identity()
+                .times(
+                  Mat4.translation(Math.floor(Math.random() * 19) - 9, 11, 0)
+                )
+                .times(
+                  Mat4.scale(
+                    this.ball_radius,
+                    this.ball_radius,
+                    this.ball_radius
+                  )
+                ),
+              ball_direction: Mat4.translation(
+                Math.random() * 2 - 1,
+                0,
+                Math.random() < 0.5 ? 0.5 : -0.5
+              ),
+            });
+        }
       }
+      if (!this.game_paused)
+        this.powerup.transform = this.powerup.transform.times(
+          Mat4.rotation(1 / 50, 0, 1, 0)
+        );
+      this.shapes.box.draw(
+        context,
+        program_state,
+        this.powerup.transform,
+        this.materials.metal
+      );
     }
-    this.powerup.transform = this.powerup.transform.times(
-      Mat4.rotation(1 / 50, 0, 1, 0)
-    );
-    this.shapes.box.draw(
-      context,
-      program_state,
-      this.powerup.transform,
-      this.materials.metal
-    );
   }
 
   display(context, program_state) {
@@ -713,22 +750,6 @@ export class Pong extends Base_Scene {
       context,
       program_state,
       difficulty,
-      this.materials.text
-    );
-
-    // display ball speed
-    let ball_speed = Mat4.identity().times(Mat4.translation(-15, 15, -30));
-    let displayed_speed = this.game_started
-      ? this.ball_speed.toFixed(1)
-      : this.user_set_ball_speed.toFixed(1);
-    this.shapes.text.set_string(
-      "Ball Speed: " + displayed_speed,
-      context.context
-    );
-    this.shapes.text.draw(
-      context,
-      program_state,
-      ball_speed,
       this.materials.text
     );
   }
