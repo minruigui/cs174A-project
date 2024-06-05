@@ -1,6 +1,8 @@
 import { defs, tiny } from "./examples/common.js";
 import { draw_table, draw_room } from "./table_model.js";
 import { Text_Line } from "./examples/text-demo.js";
+import {Color_Phong_Shader, Shadow_Textured_Phong_Shader,
+  Depth_Texture_Shader_2D, Buffered_Texture, LIGHT_DEPTH_TEX_SIZE,texture_buffer_init} from './shadow-demo-shaders.js'
 
 // Create audio element
 const audioFiles = ["./assets/HitSound.m4a", "./assets/HitSound2.m4a"];
@@ -127,89 +129,8 @@ class Cube extends Shape {
   }
 }
 
-class Cube_Outline extends Shape {
-  constructor() {
-    super("position", "color");
-    // Define the positions of the cube outline vertices
-    this.arrays.position = Vector3.cast(
-      [-1, -1, -1],
-      [1, -1, -1],
-      [1, -1, -1],
-      [1, -1, 1],
-      [1, -1, 1],
-      [-1, -1, 1],
-      [-1, -1, 1],
-      [-1, -1, -1],
-      [-1, 1, -1],
-      [1, 1, -1],
-      [1, 1, -1],
-      [1, 1, 1],
-      [1, 1, 1],
-      [-1, 1, 1],
-      [-1, 1, 1],
-      [-1, 1, -1],
-      [-1, -1, -1],
-      [-1, 1, -1],
-      [1, -1, -1],
-      [1, 1, -1],
-      [1, -1, 1],
-      [1, 1, 1],
-      [-1, -1, 1],
-      [-1, 1, 1]
-    );
 
-    // Set each color value to full white
-    this.arrays.color = Array(24).fill(color(1, 1, 1, 1));
 
-    // Disable indices for the outline
-    this.indices = false;
-  }
-}
-
-class Cube_Single_Strip extends Shape {
-  constructor() {
-    super("position", "normal");
-
-    // Define the vertex positions for the triangle strip
-    this.arrays.position = Vector3.cast(
-      [-1, 1, 1],
-      [1, 1, 1], // Front-top-left, Front-top-right
-      [-1, -1, 1],
-      [1, -1, 1], // Front-bottom-left, Front-bottom-right
-      [1, -1, -1],
-      [1, 1, 1], // Back-bottom-right, Front-top-right
-      [1, 1, -1],
-      [-1, 1, 1], // Back-top-right, Front-top-left
-      [-1, 1, -1],
-      [-1, -1, 1], // Back-top-left, Front-bottom-left
-      [-1, -1, -1],
-      [1, -1, -1], // Back-bottom-left, Back-bottom-right
-      [-1, 1, -1],
-      [1, 1, -1] // Back-top-left, Back-top-right
-    );
-
-    // Calculate the vertex normals
-    this.arrays.normal = Vector3.cast(
-      [0, 0, 1],
-      [0, 0, 1], // Front face
-      [0, 0, 1],
-      [0, 0, 1], // Front face
-      [1, 0, 0],
-      [1, 0, 0], // Right face
-      [0, 0, -1],
-      [0, 0, -1], // Back face
-      [0, 0, -1],
-      [0, 0, -1], // Back face
-      [-1, 0, 0],
-      [-1, 0, 0], // Left face
-      [0, 1, 0],
-      [0, 1, 0] // Top face
-    );
-
-    // Define the indices for the triangle strip
-    this.indices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
-  }
-}
 
 class Base_Scene extends Scene {
   /**
@@ -223,8 +144,6 @@ class Base_Scene extends Scene {
     // At the beginning of our program, load one of each of these shape definitions onto the GPU.
     this.shapes = {
       cube: new Cube(),
-      outline: new Cube_Outline(),
-      strip: new Cube_Single_Strip(),
       ball: new defs.Subdivision_Sphere(4),
       text: new Text_Line(35),
       box: new defs.Cube(),
@@ -655,9 +574,7 @@ export class Pong extends Base_Scene {
       );
     }
   }
-
-  display(context, program_state) {
-    super.display(context, program_state);
+  render_science(context, program_state){
     let model_transform = Mat4.identity();
     let t = program_state.animation_time / 1000;
 
@@ -752,5 +669,9 @@ export class Pong extends Base_Scene {
       difficulty,
       this.materials.text
     );
+  }
+  display(context, program_state) {
+    super.display(context, program_state);
+    this.render_science(context,program_state)
   }
 }
