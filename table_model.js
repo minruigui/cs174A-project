@@ -6,7 +6,7 @@ const {
 
 export function draw_table(scene, context, program_state, model_transform){
 
-    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.scale(10,0.5,20)),scene.materials.marble)
+    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.scale(10,0.5,20)),scene.materials.plastic.override({color: hex_color("#000000")}))
     //sides
     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(10.1,0.5,0)).times(Mat4.scale(0.1,0.5,20)),scene.materials.wood)
     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-10.1,0.5,0)).times(Mat4.scale(0.1,0.5,20)),scene.materials.wood)
@@ -18,6 +18,10 @@ export function draw_table(scene, context, program_state, model_transform){
     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(9.5,-5.5,-19.5)).times(Mat4.scale(0.5,5,0.5)),scene.materials.wood)
     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-9.5,-5.5,19.5)).times(Mat4.scale(0.5,5,0.5)),scene.materials.wood)
     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(9.5,-5.5,19.5)).times(Mat4.scale(0.5,5,0.5)),scene.materials.wood)
+
+    // lines on table
+    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,.01,0)).times(Mat4.scale(10,0.5,0.1)),scene.materials.plastic.override({color: color(1,1,1,1)}))
+
 
     // scene.shapes.box.draw(context, program_state, Mat4.scale(10, 0.5, 10).times(Mat4.translation(0, 21, 0)), scene.materials.floor);
 }

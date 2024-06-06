@@ -1,6 +1,7 @@
 import { defs, tiny } from "./examples/common.js";
 import { draw_table, draw_room } from "./table_model.js";
 import { Text_Line } from "./examples/text-demo.js";
+import { Shape_From_File } from "./examples/obj-file-demo.js";
 import {Color_Phong_Shader, Shadow_Textured_Phong_Shader,
   Depth_Texture_Shader_2D, Buffered_Texture, LIGHT_DEPTH_TEX_SIZE,texture_buffer_init} from './shadow-demo-shaders.js'
 
@@ -147,6 +148,7 @@ class Base_Scene extends Scene {
       ball: new defs.Subdivision_Sphere(4),
       text: new Text_Line(35),
       box: new defs.Cube(),
+      bruin: new Shape_From_File("assets/bruin.obj"),
     };
 
     // *** Materials
@@ -177,11 +179,10 @@ class Base_Scene extends Scene {
         diffusivity: 0.7,
         texture: new Texture("assets/wood.png"),
       }),
-      paddle: new Material(new defs.Textured_Phong(1), {
-        ambient: 1,
-        diffusivity: 0.9,
-        specularity: 1,
-        texture: new Texture("assets/wood.png"),
+      paddle: new Material(new defs.Phong_Shader(), {
+        ambient: 0.4,
+        diffusivity: 0.6,
+        color: hex_color("#ffffff"),
       }),
       metal: new Material(new defs.Textured_Phong(1), {
         ambient: 0.7,
@@ -236,6 +237,7 @@ export class Pong extends Base_Scene {
 
     this.last_prediction_time = 0;
     this.paddle1_width = 2;
+    this.paddle1_color = color(0, 0, 1, 1);
     this.move_paddle2 = true;
     this.ball_radius = 0.25;
     this.left_wall = -10.1;
@@ -247,6 +249,7 @@ export class Pong extends Base_Scene {
     this.ball_color = color(1, 0, 0, 1);
     this.player1_score = 0;
     this.player2_score = 0;
+    this.last_team_scored = 0;
     this.ball_speed = 1;
     this.game_started = false;
     this.difficulty = 0.3;
@@ -270,7 +273,7 @@ export class Pong extends Base_Scene {
     this.balls = [
       {
         ball_transform: Mat4.identity()
-          .times(Mat4.translation(0, 11, 0))
+          .times(Mat4.translation(0, 10.9, 0))
           .times(
             Mat4.scale(this.ball_radius, this.ball_radius, this.ball_radius)
           ),
@@ -287,6 +290,804 @@ export class Pong extends Base_Scene {
     this.ball_transform = Mat4.identity()
       .times(Mat4.translation(0, 11, 0))
       .times(Mat4.scale(this.ball_radius, this.ball_radius, this.ball_radius));
+
+    this.people_array = [
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, -25))
+          .times(Mat4.rotation(-1, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, -25))
+          .times(Mat4.rotation(-1, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, -25))
+          .times(Mat4.rotation(-1, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, -25))
+          .times(Mat4.rotation(-1, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, -25))
+          .times(Mat4.rotation(-1, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, -25))
+          .times(Mat4.rotation(-1, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [20, 8.8, -25],
+        team: 2,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(30, 8.8, -15))
+          .times(Mat4.rotation(-1.2, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(30, 8.8, -15))
+          .times(Mat4.rotation(-1.2, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(30, 8.8, -15))
+          .times(Mat4.rotation(-1.2, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(30, 8.8, -15))
+          .times(Mat4.rotation(-1.2, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(30, 8.8, -15))
+          .times(Mat4.rotation(-1.2, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(30, 8.8, -15))
+          .times(Mat4.rotation(-1.2, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [30, 8.8, -15],
+        team: 2,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(9, 8.8, -36))
+          .times(Mat4.rotation(-0.3, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(9, 8.8, -36))
+          .times(Mat4.rotation(-0.3, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(9, 8.8, -36))
+          .times(Mat4.rotation(-0.3, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(9, 8.8, -36))
+          .times(Mat4.rotation(-0.3, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(9, 8.8, -36))
+          .times(Mat4.rotation(-0.3, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(9, 8.8, -36))
+          .times(Mat4.rotation(-0.3, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [9, 8.8, -36],
+        team: 2,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(17, 8.8, -40))
+          .times(Mat4.rotation(-0.3, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(17, 8.8, -40))
+          .times(Mat4.rotation(-0.3, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(17, 8.8, -40))
+          .times(Mat4.rotation(-0.3, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(17, 8.8, -40))
+          .times(Mat4.rotation(-0.3, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(17, 8.8, -40))
+          .times(Mat4.rotation(-0.3, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(17, 8.8, -40))
+          .times(Mat4.rotation(-0.3, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [17, 8.8, -40],
+        team: 2,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(28, 8.8, -30))
+          .times(Mat4.rotation(-0.8, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(28, 8.8, -30))
+          .times(Mat4.rotation(-0.8, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(28, 8.8, -30))
+          .times(Mat4.rotation(-0.8, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(28, 8.8, -30))
+          .times(Mat4.rotation(-0.8, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(28, 8.8, -30))
+          .times(Mat4.rotation(-0.8, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(28, 8.8, -30))
+          .times(Mat4.rotation(-0.8, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [28, 8.8, -30],
+        team: 2,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, -13))
+          .times(Mat4.rotation(-1.3, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, -13))
+          .times(Mat4.rotation(-1.3, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, -13))
+          .times(Mat4.rotation(-1.3, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, -13))
+          .times(Mat4.rotation(-1.3, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, -13))
+          .times(Mat4.rotation(-1.3, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, -13))
+          .times(Mat4.rotation(-1.3, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [20, 8.8, -13],
+        team: 2,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, -25))
+          .times(Mat4.rotation(1, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, -25))
+          .times(Mat4.rotation(1, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, -25))
+          .times(Mat4.rotation(1, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, -25))
+          .times(Mat4.rotation(1, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, -25))
+          .times(Mat4.rotation(1, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, -25))
+          .times(Mat4.rotation(1, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [-20, 8.8, -25],
+        team: 2,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(-30, 8.8, -15))
+          .times(Mat4.rotation(1.2, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(-30, 8.8, -15))
+          .times(Mat4.rotation(1.2, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(-30, 8.8, -15))
+          .times(Mat4.rotation(1.2, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(-30, 8.8, -15))
+          .times(Mat4.rotation(1.2, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(-30, 8.8, -15))
+          .times(Mat4.rotation(1.2, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(-30, 8.8, -15))
+          .times(Mat4.rotation(1.2, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [-30, 8.8, -15],
+        team: 2,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(-9, 8.8, -36))
+          .times(Mat4.rotation(0.3, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(-9, 8.8, -36))
+          .times(Mat4.rotation(0.3, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(-9, 8.8, -36))
+          .times(Mat4.rotation(0.3, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(-9, 8.8, -36))
+          .times(Mat4.rotation(0.3, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(-9, 8.8, -36))
+          .times(Mat4.rotation(0.3, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(-9, 8.8, -36))
+          .times(Mat4.rotation(0.3, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [-9, 8.8, -36],
+        team: 2,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(-17, 8.8, -40))
+          .times(Mat4.rotation(0.3, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(-17, 8.8, -40))
+          .times(Mat4.rotation(0.3, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(-17, 8.8, -40))
+          .times(Mat4.rotation(0.3, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(-17, 8.8, -40))
+          .times(Mat4.rotation(0.3, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(-17, 8.8, -40))
+          .times(Mat4.rotation(0.3, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(-17, 8.8, -40))
+          .times(Mat4.rotation(0.3, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [-17, 8.8, -40],
+        team: 2,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(-28, 8.8, -30))
+          .times(Mat4.rotation(0.8, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(-28, 8.8, -30))
+          .times(Mat4.rotation(0.8, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(-28, 8.8, -30))
+          .times(Mat4.rotation(0.8, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(-28, 8.8, -30))
+          .times(Mat4.rotation(0.8, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(-28, 8.8, -30))
+          .times(Mat4.rotation(0.8, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(-28, 8.8, -30))
+          .times(Mat4.rotation(0.8, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [-28, 8.8, -30],
+        team: 2,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, -13))
+          .times(Mat4.rotation(1.3, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, -13))
+          .times(Mat4.rotation(1.3, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, -13))
+          .times(Mat4.rotation(1.3, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, -13))
+          .times(Mat4.rotation(1.3, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, -13))
+          .times(Mat4.rotation(1.3, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, -13))
+          .times(Mat4.rotation(1.3, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [-20, 8.8, -13],
+        team: 2,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, 25))
+          .times(Mat4.rotation(1 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, 25))
+          .times(Mat4.rotation(1 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, 25))
+          .times(Mat4.rotation(1 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, 25))
+          .times(Mat4.rotation(1 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, 25))
+          .times(Mat4.rotation(1 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, 25))
+          .times(Mat4.rotation(1 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [20, 8.8, 25],
+        team: 1,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(30, 8.8, 15))
+          .times(Mat4.rotation(1.2 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(30, 8.8, 15))
+          .times(Mat4.rotation(1.2 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(30, 8.8, 15))
+          .times(Mat4.rotation(1.2 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(30, 8.8, 15))
+          .times(Mat4.rotation(1.2 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(30, 8.8, 15))
+          .times(Mat4.rotation(1.2 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(30, 8.8, 15))
+          .times(Mat4.rotation(1.2 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [30, 8.8, 15],
+        team: 1,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(9, 8.8, 36))
+          .times(Mat4.rotation(0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(9, 8.8, 36))
+          .times(Mat4.rotation(0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(9, 8.8, 36))
+          .times(Mat4.rotation(0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(9, 8.8, 36))
+          .times(Mat4.rotation(0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(9, 8.8, 36))
+          .times(Mat4.rotation(0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(9, 8.8, 36))
+          .times(Mat4.rotation(0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [9, 8.8, 36],
+        team: 1,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(17, 8.8, 40))
+          .times(Mat4.rotation(0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(17, 8.8, 40))
+          .times(Mat4.rotation(0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(17, 8.8, 40))
+          .times(Mat4.rotation(0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(17, 8.8, 40))
+          .times(Mat4.rotation(0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(17, 8.8, 40))
+          .times(Mat4.rotation(0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(17, 8.8, 40))
+          .times(Mat4.rotation(0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [17, 8.8, 40],
+        team: 1,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(28, 8.8, 30))
+          .times(Mat4.rotation(0.8 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(28, 8.8, 30))
+          .times(Mat4.rotation(0.8 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(28, 8.8, 30))
+          .times(Mat4.rotation(0.8 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(28, 8.8, 30))
+          .times(Mat4.rotation(0.8 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(28, 8.8, 30))
+          .times(Mat4.rotation(0.8 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(28, 8.8, 30))
+          .times(Mat4.rotation(0.8 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [28, 8.8, 30],
+        team: 1,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, 13))
+          .times(Mat4.rotation(1.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, 13))
+          .times(Mat4.rotation(1.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, 13))
+          .times(Mat4.rotation(1.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, 13))
+          .times(Mat4.rotation(1.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, 13))
+          .times(Mat4.rotation(1.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(20, 8.8, 13))
+          .times(Mat4.rotation(1.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [20, 8.8, 13],
+        team: 1,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, 25))
+          .times(Mat4.rotation(-1 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, 25))
+          .times(Mat4.rotation(-1 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, 25))
+          .times(Mat4.rotation(-1 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, 25))
+          .times(Mat4.rotation(-1 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, 25))
+          .times(Mat4.rotation(-1 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, 25))
+          .times(Mat4.rotation(-1 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [-20, 8.8, 25],
+        team: 1,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(-30, 8.8, 15))
+          .times(Mat4.rotation(-1.2 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(-30, 8.8, 15))
+          .times(Mat4.rotation(-1.2 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(-30, 8.8, 15))
+          .times(Mat4.rotation(-1.2 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(-30, 8.8, 15))
+          .times(Mat4.rotation(-1.2 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(-30, 8.8, 15))
+          .times(Mat4.rotation(-1.2 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(-30, 8.8, 15))
+          .times(Mat4.rotation(-1.2 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [-30, 8.8, 15],
+        team: 1,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(-9, 8.8, 36))
+          .times(Mat4.rotation(-0.3 + Math.PI, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(-9, 8.8, 36))
+          .times(Mat4.rotation(-0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(-9, 8.8, 36))
+          .times(Mat4.rotation(-0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(-9, 8.8, 36))
+          .times(Mat4.rotation(-0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(-9, 8.8, 36))
+          .times(Mat4.rotation(-0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(-9, 8.8, 36))
+          .times(Mat4.rotation(-0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [-9, 8.8, 36],
+        team: 1,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(-17, 8.8, 40))
+          .times(Mat4.rotation(-0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(-17, 8.8, 40))
+          .times(Mat4.rotation(-0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(-17, 8.8, 40))
+          .times(Mat4.rotation(-0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(-17, 8.8, 40))
+          .times(Mat4.rotation(-0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(-17, 8.8, 40))
+          .times(Mat4.rotation(-0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(-17, 8.8, 40))
+          .times(Mat4.rotation(-0.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [-17, 8.8, 40],
+        team: 1,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(-28, 8.8, 30))
+          .times(Mat4.rotation(-0.8 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(-28, 8.8, 30))
+          .times(Mat4.rotation(-0.8 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(-28, 8.8, 30))
+          .times(Mat4.rotation(-0.8 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(-28, 8.8, 30))
+          .times(Mat4.rotation(-0.8 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(-28, 8.8, 30))
+          .times(Mat4.rotation(-0.8 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(-28, 8.8, 30))
+          .times(Mat4.rotation(-0.8 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [-28, 8.8, 30],
+        team: 1,
+      },
+      {
+        head: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, 13))
+          .times(Mat4.rotation(-1.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(2, 2, 2))
+          .times(Mat4.translation(0, 2.5, 0)),
+        body: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, 13))
+          .times(Mat4.rotation(-1.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(3.2, 3.2, 2)),
+        right_arm: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, 13))
+          .times(Mat4.rotation(-1.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(4.2, 0, 0)),
+        left_arm: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, 13))
+          .times(Mat4.rotation(-1.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1, 3.2, 2))
+          .times(Mat4.translation(-4.2, 0, 0)),
+        right_leg: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, 13))
+          .times(Mat4.rotation(-1.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(-1, -2, 0)),
+        left_leg: Mat4.identity()
+          .times(Mat4.translation(-20, 8.8, 13))
+          .times(Mat4.rotation(-1.3 + Math.PI, 0, 1, 0))
+          .times(Mat4.scale(1.6, 3.2, 2))
+          .times(Mat4.translation(1, -2, 0)),
+        initial_location: [-20, 8.8, 13],
+        team: 1,
+      },
+    ];
+    this.dt = 0;
+    this.people_rotation = 0;
+    this.spin_people = false;
   }
 
   make_control_panel() {
@@ -344,17 +1145,28 @@ export class Pong extends Base_Scene {
         x.ball_transform[2][3] >= this.front_wall - 0.35 ||
         x.ball_transform[2][3] <= this.back_wall + 0.35
       ) {
-        if (x.ball_transform[2][3] >= this.front_wall - 0.35)
+        this.spin_people = true;
+        if (x.ball_transform[2][3] >= this.front_wall - 0.35) {
           this.player2_score++;
-        else this.player1_score++;
+          this.last_team_scored = 2;
+        } else {
+          this.last_team_scored = 1;
+          this.player1_score++;
+        }
 
         audioElements[1].play().catch((error) => {
           console.error("Error playing audio:", error);
         });
 
         // restart game
-        if (index == 0) this.start_game();
-        else {
+        if (index == 0) {
+          this.start_game();
+          if (x.ball_transform[2][3] >= this.front_wall - 0.35) {
+            this.last_team_scored = 2;
+          } else {
+            this.player1_score++;
+          }
+        } else {
           this.balls.splice(index, 1);
         }
       } else {
@@ -373,22 +1185,55 @@ export class Pong extends Base_Scene {
   }
 
   draw_paddle(context, program_state) {
-    if (this.paddle2_transform[0][3] < -9) this.paddle2_transform[0][3] = -9;
-    else if (this.paddle2_transform[0][3] > 9) this.paddle2_transform[0][3] = 9;
-    else if (this.move_paddle2)
+    if (
+      this.balls[0].ball_transform[0][3] >= -9 &&
+      this.balls[0].ball_transform[0][3] <= 9 &&
+      this.balls[0].ball_direction[2][3] < 0 &&
+      Math.abs(
+        this.balls[0].ball_transform[0][3] - this.paddle2_transform[0][3]
+      ) < 1
+    )
       this.paddle2_transform[0][3] = this.balls[0].ball_transform[0][3];
-
+    else if (
+      Math.abs(
+        this.balls[0].ball_transform[0][3] - this.paddle2_transform[0][3]
+      ) >= 1 &&
+      this.move_paddle2
+    ) {
+      if (this.paddle2_transform[0][3] < this.balls[0].ball_transform[0][3])
+        this.paddle2_transform = this.paddle2_transform.times(
+          Mat4.translation(0.2, 0, 0)
+        );
+      else
+        this.paddle2_transform = this.paddle2_transform.times(
+          Mat4.translation(-0.2, 0, 0)
+        );
+    } else if (
+      !this.move_paddle2 &&
+      this.paddle2_transform[0][3] <= 9 &&
+      this.paddle2_transform[0][3] >= -9 &&
+      this.game_started
+    ) {
+      if (this.paddle2_transform[0][3] < this.balls[0].ball_transform[0][3])
+        this.paddle2_transform = this.paddle2_transform.times(
+          Mat4.translation(-0.1, 0, 0)
+        );
+      else
+        this.paddle2_transform = this.paddle2_transform.times(
+          Mat4.translation(0.1, 0, 0)
+        );
+    }
     this.shapes.box.draw(
       context,
       program_state,
       this.paddle1_transform,
-      this.materials.paddle
+      this.materials.paddle.override({ color: this.paddle1_color })
     );
     this.shapes.box.draw(
       context,
       program_state,
       this.paddle2_transform,
-      this.materials.paddle
+      this.materials.paddle.override({ color: hex_color("#FF0000") })
     );
   }
 
@@ -512,6 +1357,170 @@ export class Pong extends Base_Scene {
     }, 800);
   }
 
+  celebrate(angle) {
+    this.people_array.map((x) => {
+      if (this.last_team_scored == x.team) {
+        x.body = Mat4.identity()
+          .times(Mat4.translation(0, 0.2 * Math.sin(this.people_rotation), 0))
+          .times(
+            Mat4.translation(
+              x.initial_location[0],
+              x.initial_location[1],
+              x.initial_location[2]
+            )
+          )
+          .times(Mat4.rotation(angle, 0, 1, 0))
+          .times(
+            Mat4.translation(
+              -x.initial_location[0],
+              -x.initial_location[1],
+              -x.initial_location[2]
+            )
+          )
+          .times(x.body);
+        x.left_arm = Mat4.identity()
+          .times(Mat4.translation(0, 0.2 * Math.sin(this.people_rotation), 0))
+          .times(
+            Mat4.translation(
+              x.initial_location[0],
+              x.initial_location[1],
+              x.initial_location[2]
+            )
+          )
+          .times(Mat4.rotation(angle, 0, 1, 0))
+          .times(
+            Mat4.translation(
+              -x.initial_location[0],
+              -x.initial_location[1],
+              -x.initial_location[2]
+            )
+          )
+          .times(x.left_arm);
+        x.right_arm = Mat4.identity()
+          .times(Mat4.translation(0, 0.2 * Math.sin(this.people_rotation), 0))
+          .times(
+            Mat4.translation(
+              x.initial_location[0],
+              x.initial_location[1],
+              x.initial_location[2]
+            )
+          )
+          .times(Mat4.rotation(angle, 0, 1, 0))
+          .times(
+            Mat4.translation(
+              -x.initial_location[0],
+              -x.initial_location[1],
+              -x.initial_location[2]
+            )
+          )
+          .times(x.right_arm);
+        x.head = Mat4.identity()
+          .times(Mat4.translation(0, 0.2 * Math.sin(this.people_rotation), 0))
+          .times(
+            Mat4.translation(
+              x.initial_location[0],
+              x.initial_location[1],
+              x.initial_location[2]
+            )
+          )
+          .times(Mat4.rotation(angle, 0, 1, 0))
+          .times(
+            Mat4.translation(
+              -x.initial_location[0],
+              -x.initial_location[1],
+              -x.initial_location[2]
+            )
+          )
+          .times(x.head);
+        x.left_leg = Mat4.identity()
+          .times(Mat4.translation(0, 0.2 * Math.sin(this.people_rotation), 0))
+          .times(
+            Mat4.translation(
+              x.initial_location[0],
+              x.initial_location[1],
+              x.initial_location[2]
+            )
+          )
+          .times(Mat4.rotation(angle, 0, 1, 0))
+          .times(
+            Mat4.translation(
+              -x.initial_location[0],
+              -x.initial_location[1],
+              -x.initial_location[2]
+            )
+          )
+          .times(x.left_leg);
+        x.right_leg = Mat4.identity()
+          .times(Mat4.translation(0, 0.2 * Math.sin(this.people_rotation), 0))
+          .times(
+            Mat4.translation(
+              x.initial_location[0],
+              x.initial_location[1],
+              x.initial_location[2]
+            )
+          )
+          .times(Mat4.rotation(angle, 0, 1, 0))
+          .times(
+            Mat4.translation(
+              -x.initial_location[0],
+              -x.initial_location[1],
+              -x.initial_location[2]
+            )
+          )
+          .times(x.right_leg);
+      }
+    });
+  }
+
+  draw_people(context, program_state) {
+    this.people_array.map((x) => {
+      this.shapes.bruin.draw(
+        context,
+        program_state,
+        x.head,
+        this.materials.plastic.override({ color: color(1, 0.79, 0.035, 1) })
+      );
+      this.shapes.box.draw(
+        context,
+        program_state,
+        x.body,
+        this.materials.plastic
+      );
+      this.shapes.box.draw(
+        context,
+        program_state,
+        x.right_arm,
+        this.materials.plastic.override({
+          color: x.team == 1 ? color(0.2, 0.6, 1, 1) : color(1, 0, 0, 1),
+        })
+      );
+      this.shapes.box.draw(
+        context,
+        program_state,
+        x.left_arm,
+        this.materials.plastic.override({
+          color: x.team == 1 ? color(0.2, 0.6, 1, 1) : color(1, 0, 0, 1),
+        })
+      );
+      this.shapes.box.draw(
+        context,
+        program_state,
+        x.right_leg,
+        this.materials.plastic.override({
+          color: x.team == 1 ? color(0.2, 0.6, 1, 1) : color(1, 0, 0, 1),
+        })
+      );
+      this.shapes.box.draw(
+        context,
+        program_state,
+        x.left_leg,
+        this.materials.plastic.override({
+          color: x.team == 1 ? color(0.2, 0.6, 1, 1) : color(1, 0.1, 0.1, 1),
+        })
+      );
+    });
+  }
+
   spawn_random_powerup(context, program_state, t) {
     if (this.powerup.current_running_id == null) {
       let dx =
@@ -520,7 +1529,7 @@ export class Pong extends Base_Scene {
         this.balls[0].ball_transform[2][3] - this.powerup.transform[2][3];
       let distance = Math.sqrt(dx * dx + dz * dz);
       // if collision detected
-      if (distance < this.ball_radius + this.powerup.radius) {
+      if (distance < this.ball_radius + this.powerup.radius + 0.25) {
         this.powerup.transform = Mat4.identity()
           .times(Mat4.translation(100, 100, 100))
           .times(Mat4.scale(0, 0, 0));
@@ -533,13 +1542,33 @@ export class Pong extends Base_Scene {
             .times(Mat4.scale(this.paddle1_width / 2, 0.25, 0.25));
           clearTimeout(this.powerup.current_running_id);
           this.powerup.current_running_id = setTimeout(() => {
-            this.powerup.current_running_id = null;
-            this.paddle1_width = 2;
-            this.paddle1_transform = Mat4.identity()
-              .times(Mat4.translation(0, 11, 19))
-              .times(Mat4.scale(this.paddle1_width / 2, 0.25, 0.25));
-            console.log(this.paddle1_width);
-          }, 10000);
+            this.paddle1_color = color(0, 0, 1, 1);
+            setTimeout(() => {
+              this.paddle1_color = color(0, 0, 1, 0.5);
+              setTimeout(() => {
+                this.paddle1_color = color(0, 0, 1, 1);
+                setTimeout(() => {
+                  this.paddle1_color = color(0, 0, 1, 0.5);
+                  setTimeout(() => {
+                    this.paddle1_color = color(0, 0, 1, 1);
+                    setTimeout(() => {
+                      this.paddle1_color = color(0, 0, 1, 0.5);
+                      setTimeout(() => {
+                        this.paddle1_color = color(0, 0, 1, 1);
+                        this.powerup.current_running_id = null;
+                        this.paddle1_width = 2;
+                        this.paddle1_transform = Mat4.identity()
+                          .times(Mat4.translation(0, 11, 19))
+                          .times(
+                            Mat4.scale(this.paddle1_width / 2, 0.25, 0.25)
+                          );
+                      }, 500);
+                    }, 500);
+                  }, 500);
+                }, 500);
+              }, 500);
+            }, 500);
+          }, 7000);
         } else if (this.powerup.id == 2) {
           for (let i = 0; i < Math.floor(Math.random() * 10) + 1; i++)
             this.balls.push({
@@ -570,13 +1599,14 @@ export class Pong extends Base_Scene {
         context,
         program_state,
         this.powerup.transform,
-        this.materials.metal
+        this.materials.plastic.override({ color: color(0, 1, 0, 0.5) })
       );
     }
   }
   render_science(context, program_state){
     let model_transform = Mat4.identity();
     let t = program_state.animation_time / 1000;
+    this.dt = program_state.animation_delta_time / 1000;
 
     // spawn a powerup every 5 seconds
     let elapsed_time = t - this.powerup.last_powerup_spawned;
@@ -605,11 +1635,11 @@ export class Pong extends Base_Scene {
           );
       }
     }
-    // every 2 seconds, perform a coin flip to determine if opponent tracks ball
-    if (t - this.last_prediction_time >= 2) {
+    // every 1 seconds, perform a coin flip to determine if opponent tracks ball
+    if (t - this.last_prediction_time >= 1) {
       this.last_prediction_time = t;
       let coin_flip = Math.random() < this.difficulty ? 1 : 0;
-      if (coin_flip == 1) this.move_paddle2 = false;
+      if (coin_flip == 1 && this.move_paddle) this.move_paddle2 = false;
       else this.move_paddle2 = true;
     }
 
@@ -632,6 +1662,16 @@ export class Pong extends Base_Scene {
     );
     this.draw_ball(context, program_state);
     this.draw_paddle(context, program_state);
+    this.draw_people(context, program_state);
+    if (this.spin_people) {
+      if (this.people_rotation < 2 * Math.PI) {
+        this.people_rotation += (Math.PI * 2) / 70;
+        this.celebrate((Math.PI * 2) / 70);
+      } else {
+        this.spin_people = false;
+        this.people_rotation = 0;
+      }
+    }
 
     // Display score
     let scoreboard = Mat4.identity().times(Mat4.translation(-15, 30, -30));
