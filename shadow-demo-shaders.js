@@ -190,7 +190,7 @@ export class Shadow_Textured_Phong_Shader extends defs.Phong_Shader {
                             shadow += projected_depth >= light_depth_value + light_depth_bias ? 1.0 : 0.0;        
                         }    
                     }
-                    shadow /= 9.0;
+                    shadow /= 8.0;
                     return shadow;
                 }
                 
@@ -227,8 +227,9 @@ export class Shadow_Textured_Phong_Shader extends defs.Phong_Shader {
                         float shadowness = PCF_shadow(light_tex_coord.xy, projected_depth);
                         
                         if (inRange && shadowness > 0.1) {
-                            diffuse *= 0.2 + 0.8 * (1.0 - shadowness);
+                            diffuse *= 1.0 - shadowness;
                             specular *= 1.0 - shadowness;
+                            gl_FragColor.xyz *= 0.7 + 0.3 * (1.0 - shadowness);
                         }
                     }
                     
@@ -430,9 +431,9 @@ export class Buffered_Texture extends tiny.Graphics_Card_Object {
         
         // Bind it to TinyGraphics
         this.light_depth_texture = new Buffered_Texture(this.lightDepthTexture);
-        this.materials["wood"].light_depth_texture = this.light_depth_texture
+        this.materials["plastic"].light_depth_texture = this.light_depth_texture
         this.materials["marble"].light_depth_texture = this.light_depth_texture
-        this.materials["floor"].light_depth_texture = this.light_depth_texture
+        // this.materials["floor"].light_depth_texture = this.light_depth_texture
 
 
         this.lightDepthTextureSize = LIGHT_DEPTH_TEX_SIZE;
@@ -496,8 +497,8 @@ export class Buffered_Texture extends tiny.Graphics_Card_Object {
         const t = program_state.animation_time;
         const gl = context.context;
         this.light_view_target = vec4(0, 0, 0, 1);
-        this.light_field_of_view = 90 * Math.PI / 180; // 130 degree
-        this.light_position = Mat4.rotation(t / 1500, 0, 1, 0).times(vec4(20, 20, 0, 1));
+        this.light_field_of_view = 130 * Math.PI / 180; // 130 degree
+        this.light_position = Mat4.rotation(t / 1500, 0, 1, 0).times(vec4(20, 40, 0, 1));
         // The color of the light
         this.light_color = color(
             0.667 + Math.sin(t/500) / 3,
@@ -554,12 +555,12 @@ export class Buffered_Texture extends tiny.Graphics_Card_Object {
     export function postRender(context, program_state){
         const gl = context.context;
 
-        this.shapes.square_2d.draw(context, program_state,
-            Mat4.translation(-.99, .08, 0).times(
-            Mat4.scale(0.5, 0.5 * gl.canvas.width / gl.canvas.height, 1)
-            ),
-            this.depth_tex.override({texture: this.lightDepthTexture})
-        );
+        // this.shapes.square_2d.draw(context, program_state,
+        //     Mat4.translation(-.99, .08, 0).times(
+        //     Mat4.scale(0.5, 0.5 * gl.canvas.width / gl.canvas.height, 1)
+        //     ),
+        //     this.depth_tex.override({texture: this.lightDepthTexture})
+        // );
 
     }
 
