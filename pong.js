@@ -221,7 +221,7 @@ class Base_Scene extends Scene {
         (context.scratchpad.controls = new defs.Movement_Controls())
       );
 
-      program_state.set_camera(Mat4.translation(0, -18, -45));
+      program_state.set_camera(Mat4.translation(0, -18, -30));
     }
     program_state.projection_transform = Mat4.perspective(
       Math.PI / 4,
@@ -239,7 +239,8 @@ export class Pong extends Base_Scene {
   constructor() {
     super();
 
-    this.light_up_wall = false;
+    this.last_player = 0;
+    this.light_up_wall = 0;
     this.last_prediction_time = 0;
     this.paddle1_width = 2;
     this.paddle1_color = color(0, 0, 1, 1);
@@ -1141,7 +1142,20 @@ export class Pong extends Base_Scene {
         this.ball_zdirection *= -1;
         x.ball_direction[2][3] = this.ball_speed * this.ball_zdirection;
 
-        this.light_up_wall = true;
+        this.light_up_wall++;
+        // Collision with left wall
+        if((x.ball_transform[0][3] <=
+            this.paddle1_transform[0][3] + this.paddle1_width / 2 &&
+            x.ball_transform[0][3] >=
+            this.paddle1_transform[0][3] - this.paddle1_width / 2 &&
+            x.ball_transform[2][3] >= this.paddle1_transform[2][3] - 0.5)){
+          this.last_player = 0;
+        } else if (x.ball_transform[0][3] <= this.paddle2_transform[0][3] + 1 &&
+            x.ball_transform[0][3] >= this.paddle2_transform[0][3] - 1 &&
+            x.ball_transform[2][3] <= this.paddle2_transform[2][3] + 0.5
+        ) {
+          this.last_player = 1;
+        }
 
         audioElements[0].play().catch((error) => {
           console.error("Error playing audio:", error);
@@ -1673,18 +1687,23 @@ export class Pong extends Base_Scene {
       program_state,
       model_transform.times(Mat4.translation(0, 10, 0))
     );
+    this.draw_ball(context, program_state);
+
     let light_wall = false;
-    if(this.light_up_wall === true){
+    if(this.light_up_wall >= 1) {
+      console.log("Hello")
       light_wall = true;
     }
+    console.log(this.light_up_wall)
     draw_walls(
         this,
         context,
         program_state,
         model_transform,
-        light_wall
+        light_wall,
+        this.last_player
     );
-    this.draw_ball(context, program_state);
+
     this.draw_paddle(context, program_state);
     this.draw_people(context, program_state);
     if (this.spin_people) {
@@ -1698,9 +1717,8 @@ export class Pong extends Base_Scene {
     }
 
     // Reset light up walls
-    if(this.light_up_wall){
-      this.light_up_wall = false;
-    }
+    this.light_up_wall = 0;
+
     // Display score
     let scoreboard = Mat4.identity().times(Mat4.translation(-15, 30, -20));
     this.shapes.text.set_string(
@@ -1743,5 +1761,3 @@ export class Pong extends Base_Scene {
     this.render_science(context,program_state)
   }
 }
-
-export let light_up_wall = new Pong().light_up_wall;
