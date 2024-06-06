@@ -1,5 +1,6 @@
 import { defs, tiny } from "./examples/common.js";
 import { draw_table, draw_room } from "./table_model.js";
+import { draw_walls } from "./walls_model.js";
 import { Text_Line } from "./examples/text-demo.js";
 
 // Create audio element
@@ -163,6 +164,7 @@ class Cube_Outline extends Shape {
 
     // Disable indices for the outline
     this.indices = false;
+
   }
 }
 
@@ -208,6 +210,8 @@ class Cube_Single_Strip extends Shape {
 
     // Define the indices for the triangle strip
     this.indices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+
+
   }
 }
 
@@ -229,6 +233,9 @@ class Base_Scene extends Scene {
       text: new Text_Line(35),
       box: new defs.Cube(),
     };
+
+    // Light position
+    this.light_position = vec4(0, 25, 0, 1);
 
     // *** Materials
     this.materials = {
@@ -306,8 +313,8 @@ class Base_Scene extends Scene {
       200
     );
 
-    const light_position = vec4(0, 15, 0, 1);
-    program_state.lights = [new Light(light_position, color(1, 1, 1, 1), 1000)];
+    program_state.lights = [new Light(this.light_position, color(1, 1, 1, 1), 200)];
+
   }
 }
 
@@ -315,6 +322,7 @@ export class Pong extends Base_Scene {
   constructor() {
     super();
 
+    this.light_up_wall = false;
     this.last_prediction_time = 0;
     this.paddle1_width = 2;
     this.move_paddle2 = true;
@@ -415,6 +423,8 @@ export class Pong extends Base_Scene {
         this.ball_speed += 0.02;
         this.ball_zdirection *= -1;
         x.ball_direction[2][3] = this.ball_speed * this.ball_zdirection;
+
+        this.light_up_wall = true;
 
         audioElements[0].play().catch((error) => {
           console.error("Error playing audio:", error);
@@ -687,7 +697,15 @@ export class Pong extends Base_Scene {
             )
           );
       }
+
     }
+
+    // Currently, we are showing the light is inside of the ball
+    // this.light_position = vec4(this.balls[0].ball_transform[0][3], this.balls[0].ball_transform[1][3], this.balls[0].ball_transform[2][3], 1)
+    //     // program_state.lights = [new Light(this.light_position, color(1, 1, 1, 1), 100)];
+
+
+
     // every 2 seconds, perform a coin flip to determine if opponent tracks ball
     if (t - this.last_prediction_time >= 2) {
       this.last_prediction_time = t;
@@ -713,11 +731,26 @@ export class Pong extends Base_Scene {
       program_state,
       model_transform.times(Mat4.translation(0, 10, 0))
     );
+    let light_wall = false;
+    if(this.light_up_wall === true){
+      light_wall = true;
+    }
+    draw_walls(
+        this,
+        context,
+        program_state,
+        model_transform,
+        light_wall
+    );
     this.draw_ball(context, program_state);
     this.draw_paddle(context, program_state);
 
+    // Reset light up walls
+    if(this.light_up_wall){
+      this.light_up_wall = false;
+    }
     // Display score
-    let scoreboard = Mat4.identity().times(Mat4.translation(-15, 30, -30));
+    let scoreboard = Mat4.identity().times(Mat4.translation(-15, 30, -20));
     this.shapes.text.set_string(
       "Player 1: " +
         this.player1_score.toString() +
@@ -733,7 +766,7 @@ export class Pong extends Base_Scene {
     );
 
     // Display difficulty
-    let difficulty = Mat4.identity().times(Mat4.translation(-15, 20, -30));
+    let difficulty = Mat4.identity().times(Mat4.translation(-15, 20, -20));
     let current_difficulty =
       this.difficulty <= 0
         ? "Impossible"
@@ -754,3 +787,5 @@ export class Pong extends Base_Scene {
     );
   }
 }
+
+export let light_up_wall = new Pong().light_up_wall;

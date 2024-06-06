@@ -44,33 +44,33 @@ export function draw_room(scene, context, program_state, model_transform){
 
    
    
-    //walls
-    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,0,-50)).times(Mat4.scale(70,70,0.5)),scene.materials.wall)
-    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,20,-49)).times(Mat4.scale(10,10,0.5)),scene.materials.sky)
-
-    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,0,60)).times(Mat4.scale(70,70,0.5)),scene.materials.wall)
-
-    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(40,0,0)).times(Mat4.scale(0.5,70,70)),scene.materials.wall)
-    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-40,0,0)).times(Mat4.scale(0.5,70,70)),scene.materials.wall)
-    //cells
-    for(let i =0;i<5;i++){
-        scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,-50)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.wall)
-    }
-    for(let i =0;i<5;i++){
-        scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,-30)).times(Mat4.scale(10,0.5,10)),scene.materials.wall)
-    }
-    for(let i =0;i<5;i++){
-        scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,-10)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.wall)
-    }
-    for(let i =0;i<5;i++){
-        scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,10)).times(Mat4.scale(10,0.5,10)),scene.materials.wall)
-    }
-    for(let i =0;i<5;i++){
-        scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,30)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.wall)
-    }
-    for(let i =0;i<5;i++){
-        scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,50)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.wall)
-    }
-    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,49,0)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.metal)
+    // //walls
+    // scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,0,-50)).times(Mat4.scale(70,70,0.5)),scene.materials.wall)
+    // scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,20,-49)).times(Mat4.scale(10,10,0.5)),scene.materials.sky)
+    //
+    // scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,0,60)).times(Mat4.scale(70,70,0.5)),scene.materials.wall)
+    //
+    // scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(40,0,0)).times(Mat4.scale(0.5,70,70)),scene.materials.wall)
+    // scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-40,0,0)).times(Mat4.scale(0.5,70,70)),scene.materials.wall)
+    // //cells
+    // for(let i =0;i<5;i++){
+    //     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,-50)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.wall)
+    // }
+    // for(let i =0;i<5;i++){
+    //     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,-30)).times(Mat4.scale(10,0.5,10)),scene.materials.wall)
+    // }
+    // for(let i =0;i<5;i++){
+    //     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,-10)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.wall)
+    // }
+    // for(let i =0;i<5;i++){
+    //     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,10)).times(Mat4.scale(10,0.5,10)),scene.materials.wall)
+    // }
+    // for(let i =0;i<5;i++){
+    //     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,30)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.wall)
+    // }
+    // for(let i =0;i<5;i++){
+    //     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,50)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.wall)
+    // }
+    // scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,49,0)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.metal)
 
 }
