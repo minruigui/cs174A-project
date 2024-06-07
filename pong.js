@@ -189,8 +189,9 @@ export class Pong extends Base_Scene {
     this.last_team_scored = 0;
     this.ball_speed = 0.3;
     this.game_started = false;
-    this.difficulty = 0.3;
+    this.difficulty = 0.6;
     this.game_paused = false;
+    this.lights_on = true;
     this.powerup = {
       id: 1,
       transform: Mat4.identity()
@@ -203,7 +204,7 @@ export class Pong extends Base_Scene {
         )
         .times(Mat4.scale(0.75, 0.75, 0.75)),
       last_powerup_spawned: 0,
-      powerup_list: [1, 2],
+      powerup_list: [1, 2, 3],
       radius: 0.75,
       current_running_id: null,
     };
@@ -1035,10 +1036,10 @@ export class Pong extends Base_Scene {
       this.pause_game();
     });
     this.key_triggered_button("- Difficulty", ["z"], () => {
-      if (this.difficulty < 0.3) this.difficulty = this.difficulty + 0.1;
+      if (this.difficulty < 0.6) this.difficulty = this.difficulty + 0.2;
     });
     this.key_triggered_button("+ Difficulty", ["x"], () => {
-      if (this.difficulty > 0) this.difficulty = this.difficulty - 0.1;
+      if (this.difficulty > 0) this.difficulty = this.difficulty - 0.2;
     });
   }
 
@@ -1084,14 +1085,14 @@ export class Pong extends Base_Scene {
         x.ball_transform[2][3] >= this.front_wall - 0.35 ||
         x.ball_transform[2][3] <= this.back_wall + 0.35
       ) {
-        this.spin_people = true;
         if (x.ball_transform[2][3] >= this.front_wall - 0.35) {
           this.player2_score++;
-          this.last_team_scored = 2;
+          if (!this.spin_people) this.last_team_scored = 2;
         } else {
-          this.last_team_scored = 1;
+          if (!this.spin_people) this.last_team_scored = 1;
           this.player1_score++;
         }
+        this.spin_people = true;
 
         audioElements[1].play().catch((error) => {
           console.error("Error playing audio:", error);
@@ -1545,6 +1546,29 @@ export class Pong extends Base_Scene {
                 Math.random() < 0.5 ? 0.5 : -0.5
               ),
             });
+        } else if (this.powerup.id === 3) {
+          this.lights_on = false;
+          setTimeout(() => {
+            this.lights_on = true;
+            setTimeout(() => {
+              this.lights_on = false;
+              setTimeout(() => {
+                this.lights_on = true;
+                setTimeout(() => {
+                  this.lights_on = false;
+                  setTimeout(() => {
+                    this.lights_on = true;
+                    setTimeout(() => {
+                      this.lights_on = false;
+                      setTimeout(() => {
+                        this.lights_on = true;
+                      }, 300);
+                    }, 300);
+                  }, 300);
+                }, 300);
+              }, 300);
+            }, 300);
+          }, 300);
         }
       }
       if (!this.game_paused)
@@ -1691,9 +1715,9 @@ export class Pong extends Base_Scene {
     let current_difficulty =
       this.difficulty <= 0
         ? "Impossible"
-        : this.difficulty <= 0.1
-        ? "Hard"
         : this.difficulty <= 0.2
+        ? "Hard"
+        : this.difficulty <= 0.4
         ? "Medium"
         : "Easy";
     this.shapes.text.set_string(
@@ -1723,7 +1747,7 @@ export class Pong extends Base_Scene {
       0.5,
       500
     );
-    this.render_scene(context, program_state, true, true, true);
+    this.render_scene(context, program_state, this.lights_on, true, true);
     this.postRender(context, program_state);
   }
 }
