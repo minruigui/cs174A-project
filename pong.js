@@ -221,7 +221,7 @@ class Base_Scene extends Scene {
         (context.scratchpad.controls = new defs.Movement_Controls())
       );
 
-      program_state.set_camera(Mat4.translation(0, -18, -30));
+      program_state.set_camera(Mat4.translation(0, -18, -45));
     }
     program_state.projection_transform = Mat4.perspective(
       Math.PI / 4,
