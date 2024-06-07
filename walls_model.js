@@ -24,6 +24,7 @@ export function draw_walls(scene, context, program_state, model_transform, light
     let second_color = white
     let third_color = white
     let fourth_color = white
+    let fifth_color = white
 
     const time_since = t - last_time
 
@@ -36,6 +37,8 @@ export function draw_walls(scene, context, program_state, model_transform, light
             third_color = blue;
         } else if (time_since < 0.4){
             fourth_color = blue;
+        } else if (time_since < 0.5){
+            fifth_color = blue;
         }
     } else if (last_player === 1) {
         if(time_since < 0.1){
@@ -46,6 +49,8 @@ export function draw_walls(scene, context, program_state, model_transform, light
             third_color = red;
         } else if (time_since < 0.4){
             fourth_color = red;
+        } else if (time_since < 0.5){
+            fifth_color = red;
         }
     }
 
@@ -53,10 +58,10 @@ export function draw_walls(scene, context, program_state, model_transform, light
     // Back wall
     // Legacy code below
     //scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 30, -30)).times(Mat4.scale(35, 30, 1)), scene.materials.wall)
-    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 6, -30)).times(Mat4.scale(35, 6, 1)), scene.materials.plastic.override({color: hex_color(first_color)}))
-    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 18, -30)).times(Mat4.scale(35, 6, 1)), scene.materials.plastic.override({color: hex_color(second_color)}))
-    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 30, -30)).times(Mat4.scale(35, 6, 1)), scene.materials.plastic.override({color: hex_color(third_color)}))
-    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 42, -30)).times(Mat4.scale(35, 6, 1)), scene.materials.plastic.override({color: hex_color(fourth_color)}))
+    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 6, -45)).times(Mat4.scale(35, 6, 1)), scene.materials.plastic.override({color: hex_color(first_color)}))
+    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 18, -45)).times(Mat4.scale(35, 6, 1)), scene.materials.plastic.override({color: hex_color(second_color)}))
+    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 30, -45)).times(Mat4.scale(35, 6, 1)), scene.materials.plastic.override({color: hex_color(third_color)}))
+    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 42, -45)).times(Mat4.scale(35, 6, 1)), scene.materials.plastic.override({color: hex_color(fourth_color)}))
 
     // Front wall
     //scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.translation(0, 30, -30)).times(Mat4.scale(35, 30, 1)), scene.materials.wall)
@@ -71,20 +76,20 @@ export function draw_walls(scene, context, program_state, model_transform, light
     // Left walls, bottom to top, only difference is in translation
     // Legacy code below
     //scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(Math.PI / 2, 0, 1, 0)).times(Mat4.translation(0, 30, -35)).times(Mat4.scale(30, 30, 1)), scene.materials.wall)
-    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(Math.PI / 2, 0, 1, 0)).times(Mat4.translation(-8, 6, -35)).times(Mat4.scale(40, 6, 1)), scene.materials.wall.override({color: hex_color(first_color)}))
-    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(Math.PI / 2, 0, 1, 0)).times(Mat4.translation(-8, 18, -35)).times(Mat4.scale(40, 6, 1)), scene.materials.wall.override({color: hex_color(second_color)}))
-    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(Math.PI / 2, 0, 1, 0)).times(Mat4.translation(-8, 30, -35)).times(Mat4.scale(40, 6, 1)), scene.materials.wall.override({color: hex_color(third_color)}))
-    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(Math.PI / 2, 0, 1, 0)).times(Mat4.translation(-8, 42, -35)).times(Mat4.scale(40, 6, 1)), scene.materials.wall.override({color: hex_color(fourth_color)}))
+    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(Math.PI / 2, 0, 1, 0)).times(Mat4.translation(-1, 6, -35)).times(Mat4.scale(47, 6, 1)), scene.materials.wall.override({color: hex_color(first_color)}))
+    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(Math.PI / 2, 0, 1, 0)).times(Mat4.translation(-1, 18, -35)).times(Mat4.scale(47, 6, 1)), scene.materials.wall.override({color: hex_color(second_color)}))
+    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(Math.PI / 2, 0, 1, 0)).times(Mat4.translation(-1, 30, -35)).times(Mat4.scale(47, 6, 1)), scene.materials.wall.override({color: hex_color(third_color)}))
+    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(Math.PI / 2, 0, 1, 0)).times(Mat4.translation(-1, 42, -35)).times(Mat4.scale(47, 6, 1)), scene.materials.wall.override({color: hex_color(fourth_color)}))
 
 
 
     // Right wall
     // Legacy code below
     //scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(3 * Math.PI / 2, 0, 1, 0)).times(Mat4.translation(0, 30, -35)).times(Mat4.scale(30, 30, 1)), scene.materials.wall)
-    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(3 * Math.PI / 2, 0, 1, 0)).times(Mat4.translation(8, 6, -35)).times(Mat4.scale(40, 6, 1)), scene.materials.wall.override({color: hex_color(first_color)}))
-    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(3 * Math.PI / 2, 0, 1, 0)).times(Mat4.translation(8, 18, -35)).times(Mat4.scale(40, 6, 1)), scene.materials.wall.override({color: hex_color(second_color)}))
-    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(3 * Math.PI / 2, 0, 1, 0)).times(Mat4.translation(8, 30, -35)).times(Mat4.scale(40, 6, 1)), scene.materials.wall.override({color: hex_color(third_color)}))
-    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(3 * Math.PI / 2, 0, 1, 0)).times(Mat4.translation(8, 42, -35)).times(Mat4.scale(40, 6, 1)), scene.materials.wall.override({color: hex_color(fourth_color)}))
+    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(3 * Math.PI / 2, 0, 1, 0)).times(Mat4.translation(1, 6, -35)).times(Mat4.scale(47, 6, 1)), scene.materials.wall.override({color: hex_color(first_color)}))
+    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(3 * Math.PI / 2, 0, 1, 0)).times(Mat4.translation(1, 18, -35)).times(Mat4.scale(47, 6, 1)), scene.materials.wall.override({color: hex_color(second_color)}))
+    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(3 * Math.PI / 2, 0, 1, 0)).times(Mat4.translation(1, 30, -35)).times(Mat4.scale(47, 6, 1)), scene.materials.wall.override({color: hex_color(third_color)}))
+    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(3 * Math.PI / 2, 0, 1, 0)).times(Mat4.translation(1, 42, -35)).times(Mat4.scale(47, 6, 1)), scene.materials.wall.override({color: hex_color(fourth_color)}))
 
 
 
@@ -92,7 +97,7 @@ export function draw_walls(scene, context, program_state, model_transform, light
     // Ceiling
     // Legacy code below
     //scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(Math.PI / 2, 1, 0, 0)).times(Mat4.translation(0, 0, -60)).times(Mat4.scale(35, 30, 1)), scene.materials.wall)
-    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(Math.PI / 2, 1, 0, 0)).times(Mat4.translation(0, 8, -48)).times(Mat4.scale(35, 40, 1)), scene.materials.wall)
+    scene.shapes.cube.draw(context, program_state, model_transform.times(Mat4.rotation(Math.PI / 2, 1, 0, 0)).times(Mat4.translation(0, 1, -48)).times(Mat4.scale(35, 47, 1)), scene.materials.wall.override({color: hex_color(fifth_color)}))
 
 
     // Floor
