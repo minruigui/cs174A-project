@@ -433,7 +433,7 @@ export class Buffered_Texture extends tiny.Graphics_Card_Object {
         this.light_depth_texture = new Buffered_Texture(this.lightDepthTexture);
         this.materials["plastic"].light_depth_texture = this.light_depth_texture
         this.materials["marble"].light_depth_texture = this.light_depth_texture
-        // this.materials["floor"].light_depth_texture = this.light_depth_texture
+        this.materials["floor"].light_depth_texture = this.light_depth_texture
 
 
         this.lightDepthTextureSize = LIGHT_DEPTH_TEX_SIZE;
@@ -514,7 +514,7 @@ export class Buffered_Texture extends tiny.Graphics_Card_Object {
             vec3(this.light_view_target[0], this.light_view_target[1], this.light_view_target[2]),
             vec3(0, 1, 0), // assume the light to target will have a up dir of +y, maybe need to change according to your case
         );
-        const light_proj_mat = Mat4.perspective(this.light_field_of_view, 1, 0.5, 500);
+        const light_proj_mat = Mat4.perspective(this.light_field_of_view, 1, 1, 500);
         // Bind the Depth Texture Buffer
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.lightDepthFramebuffer);
         gl.viewport(0, 0, this.lightDepthTextureSize, this.lightDepthTextureSize);

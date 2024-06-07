@@ -5,7 +5,7 @@ const {
 } = tiny;
 
 export function draw_table(scene, context, program_state, model_transform){
-    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.scale(10,0.5,20)),scene.shadow_pass?scene.materials.plastic.override({color: hex_color("#000000")}): scene.pure)
+    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.scale(10,0.5,20)),scene.shadow_pass?scene.materials.plastic.override({color: hex_color("#223333")}): scene.pure)
     //sides
     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(10.1,0.5,0)).times(Mat4.scale(0.1,0.5,20)), scene.shadow_pass? scene.materials.floor : scene.pure)
     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-10.1,0.5,0)).times(Mat4.scale(0.1,0.5,20)), scene.shadow_pass? scene.materials.wood : scene.pure)
