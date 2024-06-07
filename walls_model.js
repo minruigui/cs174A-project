@@ -35,7 +35,7 @@ export function draw_walls(
     model_transform
       .times(Mat4.translation(0, 6, -50))
       .times(Mat4.scale(35, 6, 1)),
-    scene.shadow_pass ? scene.materials.wall : scene.pure
+    scene.shadow_pass ? scene.materials.plastic : scene.pure
   );
 
   scene.shapes.box.draw(
@@ -120,7 +120,7 @@ export function draw_walls(
       .times(Mat4.rotation(Math.PI / 2, 0, 1, 0))
       .times(Mat4.translation(0, 6, -35))
       .times(Mat4.scale(50, 6, 1)),
-    scene.shadow_pass ? scene.materials.wall : scene.pure
+    scene.shadow_pass ? scene.materials.plastic : scene.pure
   );
   scene.shapes.box.draw(
     context,

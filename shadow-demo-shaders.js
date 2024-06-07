@@ -1,3 +1,6 @@
+//refer to https://github.com/Robert-Lu/tiny-graphics-shadow_demo
+
+
 import {defs, tiny} from './examples/common.js';
 // Pull these names into this module's scope for convenience:
 const {vec3, vec4, vec, color, Matrix, Mat4, Light, Shape, Material, Shader, Texture, Scene} = tiny;
