@@ -172,7 +172,9 @@ export class Pong extends Base_Scene {
     super();
 
     this.last_player = 0;
+    this.last_player2 = 0;
     this.light_up_wall = 0;
+    this.light_up_winner = 0;
     this.last_prediction_time = 0;
     this.paddle1_width = 2;
     this.paddle1_color = color(0, 0, 1, 1);
@@ -1101,10 +1103,14 @@ export class Pong extends Base_Scene {
       ) {
         if (x.ball_transform[2][3] >= this.front_wall - 0.35) {
           this.player2_score++;
+          this.last_player2 = 1;
+          this.light_up_winner++;
           if (!this.spin_people) this.last_team_scored = 2;
         } else {
           if (!this.spin_people) this.last_team_scored = 1;
           this.player1_score++;
+          this.last_player2 = 0;
+          this.light_up_winner++;
         }
         this.spin_people = true;
 
@@ -1691,14 +1697,19 @@ export class Pong extends Base_Scene {
     if(this.light_up_wall >= 1) {
       light_wall = true;
     }
-    console.log(this.light_up_wall)
+    let light_winner = false;
+    if(this.light_up_winner >= 1){
+      light_winner = true;
+    }
     draw_walls(
         this,
         context,
         program_state,
         model_transform,
         light_wall,
-        this.last_player
+        this.last_player,
+        light_winner,
+        this.last_player2
     );
 
     this.draw_paddle(context, program_state);
@@ -1713,8 +1724,9 @@ export class Pong extends Base_Scene {
       }
     }
 
-    // Reset light up walls
+    // Reset light up walls and winner
     this.light_up_wall = 0;
+    this.light_up_winner = 0;
 
     // Display score
     let scoreboard = Mat4.identity().times(Mat4.translation(-17, 30, -43));

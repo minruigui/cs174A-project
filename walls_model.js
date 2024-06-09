@@ -6,51 +6,97 @@ const {
 
 let light_up_walls = false;
 let last_time = 0;
+let last_time2 = 0;
 const white = "#ffffff"
 const blue = "#0000ff"
 const red = "#ff0000"
 
+function colorToHex(r, g, b) {
+    // Convert each color component to a hexadecimal string and pad with zeros if necessary
+    r = Math.floor(r)
+    g = Math.floor(g)
+    b = Math.floor(b)
 
-export function draw_walls(scene, context, program_state, model_transform, light, last_player){
+    if(r < 0){ r = 0 }
+    else if (r > 255){ r = 255 }
+
+    if(g < 0){ g = 0 }
+    else if (g > 255){ g = 255 }
+
+    if(b < 0){ b = 0 }
+    else if (b > 255){ b = 255 }
+
+    const toHex = c => c.toString(16).padStart(2, '0');
+
+    // Concatenate the hexadecimal strings
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+
+export function draw_walls(scene, context, program_state, model_transform, light, last_player, walls, last_player2){
+    let first_color, second_color, third_color, fourth_color, fifth_color
+    function setAllColors(color){
+        first_color = color
+        second_color = color
+        third_color = color
+        fourth_color = color
+        fifth_color = color
+    }
 
     let t = program_state.animation_time / 1000;
     if(light){
         last_time = t;
     }
-    console.log(last_time)
+    if(walls){
+        last_time2 = t;
+    }
 
-    // Colors
-    let first_color = white
-    let second_color = white
-    let third_color = white
-    let fourth_color = white
-    let fifth_color = white
+    //let default_color = colorToHex(255 * Math.sin(t) + 100, 255 * Math.sin(t) + 100, 255 * Math.sin(t) + 100)
+    let default_color = white
 
-    const time_since = t - last_time
+    // Default colors
+    setAllColors(default_color)
+
+    const time_since1 = t - last_time
+    const time_since2 = t - last_time2
 
     if(last_player === 0){
-        if(time_since < 0.1){
+        // Hit player paddle
+        if(time_since1 < 0.1){
             first_color = blue;
-        } else if(time_since < 0.2) {
+        } else if(time_since1 < 0.2) {
             second_color = blue;
-        } else if (time_since < 0.3) {
+        } else if (time_since1 < 0.3) {
             third_color = blue;
-        } else if (time_since < 0.4){
+        } else if (time_since1 < 0.4){
             fourth_color = blue;
-        } else if (time_since < 0.5){
+        } else if (time_since1 < 0.5){
             fifth_color = blue;
         }
     } else if (last_player === 1) {
-        if(time_since < 0.1){
+        // Hit opponent paddle
+        if(time_since1 < 0.1){
             first_color = red;
-        } else if(time_since < 0.2) {
+        } else if(time_since1 < 0.2) {
             second_color = red;
-        } else if (time_since < 0.3) {
+        } else if (time_since1 < 0.3) {
             third_color = red;
-        } else if (time_since < 0.4){
+        } else if (time_since1 < 0.4){
             fourth_color = red;
-        } else if (time_since < 0.5){
+        } else if (time_since1 < 0.5){
             fifth_color = red;
+        }
+    }
+
+    if(last_player2 === 0){
+        // Player win
+        if(time_since2 < 1){
+            setAllColors(colorToHex(((Math.cos(2 * Math.PI * 2 * time_since2) + 1) / 2), 255 * ((Math.cos(2 * Math.PI * 2 * time_since2) + 1) / 2), 255));
+        }
+    } else if (last_player2 === 1) {
+        // Enemy win
+        if(time_since2 < 1){
+            setAllColors(colorToHex(255, 255 * ((Math.cos(2 * Math.PI * 2 * time_since2) + 1) / 2), 255 * ((Math.cos(2 * Math.PI * 2 * time_since2) + 1) / 2)));
         }
     }
 
