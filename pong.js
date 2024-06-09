@@ -3,8 +3,18 @@ import { draw_table, draw_room } from "./table_model.js";
 import { draw_walls } from "./walls_model.js";
 import { Text_Line } from "./examples/text-demo.js";
 import { Shape_From_File } from "./examples/obj-file-demo.js";
-import {Color_Phong_Shader, Shadow_Textured_Phong_Shader,
-  Depth_Texture_Shader_2D, Buffered_Texture, LIGHT_DEPTH_TEX_SIZE,texture_buffer_init} from './shadow-demo-shaders.js'
+import {
+  Color_Phong_Shader,
+  Shadow_Textured_Phong_Shader,
+  Depth_Texture_Shader_2D,
+  Buffered_Texture,
+  LIGHT_DEPTH_TEX_SIZE,
+  texture_buffer_init,
+  lightInit,
+  preRender,
+  postRender,
+  Square,
+} from "./shadow-demo-shaders.js";
 
 // Create audio element
 const audioFiles = ["./assets/HitSound.m4a", "./assets/HitSound2.m4a"];
@@ -33,107 +43,6 @@ const {
   Texture,
 } = tiny;
 
-class Cube extends Shape {
-  constructor() {
-    super("position", "normal");
-    // Loop 3 times (for each axis), and inside loop twice (for opposing cube sides):
-    this.arrays.position = Vector3.cast(
-      [-1, -1, -1],
-      [1, -1, -1],
-      [-1, -1, 1],
-      [1, -1, 1],
-      [1, 1, -1],
-      [-1, 1, -1],
-      [1, 1, 1],
-      [-1, 1, 1],
-      [-1, -1, -1],
-      [-1, -1, 1],
-      [-1, 1, -1],
-      [-1, 1, 1],
-      [1, -1, 1],
-      [1, -1, -1],
-      [1, 1, 1],
-      [1, 1, -1],
-      [-1, -1, 1],
-      [1, -1, 1],
-      [-1, 1, 1],
-      [1, 1, 1],
-      [1, -1, -1],
-      [-1, -1, -1],
-      [1, 1, -1],
-      [-1, 1, -1]
-    );
-    this.arrays.normal = Vector3.cast(
-      [0, -1, 0],
-      [0, -1, 0],
-      [0, -1, 0],
-      [0, -1, 0],
-      [0, 1, 0],
-      [0, 1, 0],
-      [0, 1, 0],
-      [0, 1, 0],
-      [-1, 0, 0],
-      [-1, 0, 0],
-      [-1, 0, 0],
-      [-1, 0, 0],
-      [1, 0, 0],
-      [1, 0, 0],
-      [1, 0, 0],
-      [1, 0, 0],
-      [0, 0, 1],
-      [0, 0, 1],
-      [0, 0, 1],
-      [0, 0, 1],
-      [0, 0, -1],
-      [0, 0, -1],
-      [0, 0, -1],
-      [0, 0, -1]
-    );
-    // Arrange the vertices into a square shape in texture space too:
-    this.indices.push(
-      0,
-      1,
-      2,
-      1,
-      3,
-      2,
-      4,
-      5,
-      6,
-      5,
-      7,
-      6,
-      8,
-      9,
-      10,
-      9,
-      11,
-      10,
-      12,
-      13,
-      14,
-      13,
-      15,
-      14,
-      16,
-      17,
-      18,
-      17,
-      19,
-      18,
-      20,
-      21,
-      22,
-      21,
-      23,
-      22
-    );
-  }
-}
-
-
-
-
 class Base_Scene extends Scene {
   /**
    *  **Base_scene** is a Scene that can be added to any display canvas.
@@ -145,10 +54,11 @@ class Base_Scene extends Scene {
     this.hover = this.swarm = false;
     // At the beginning of our program, load one of each of these shape definitions onto the GPU.
     this.shapes = {
-      cube: new Cube(),
       ball: new defs.Subdivision_Sphere(4),
+      sphere: new defs.Subdivision_Sphere(6),
       text: new Text_Line(35),
       box: new defs.Cube(),
+      square_2d: new Square(),
       bruin: new Shape_From_File("assets/bruin.obj"),
     };
 
@@ -157,33 +67,40 @@ class Base_Scene extends Scene {
 
     // *** Materials
     this.materials = {
-      plastic: new Material(new defs.Phong_Shader(), {
+      plastic: new Material(new Shadow_Textured_Phong_Shader(1), {
         ambient: 0.4,
         diffusivity: 0.6,
         color: hex_color("#ffffff"),
       }),
-      side: new Material(new defs.Phong_Shader(), {
+      ball: new Material(new defs.Phong_Shader(), {
+        ambient: 0.4,
+        diffusivity: 0.6,
+        color: hex_color("#ffffff"),
+      }),
+      side: new Material(new Shadow_Textured_Phong_Shader(1), {
         ambient: 1,
         diffusivity: 1,
         color: color(1, 1, 1, 1),
       }),
-      floor: new Material(new defs.Textured_Phong(1), {
+      floor: new Material(new Shadow_Textured_Phong_Shader(1), {
         ambient: 0.7,
         diffusivity: 1,
-        texture: new Texture("assets/floor.png"),
+        specular: 1,
+        color_texture: new Texture("assets/floor.png"),
+        color: color(0.1, 0.1, 0.1, 1),
       }),
-      marble: new Material(new defs.Textured_Phong(1), {
+      marble: new Material(new Shadow_Textured_Phong_Shader(1), {
         ambient: 0.7,
         diffusivity: 0.5,
         specularity: 0.2,
-        texture: new Texture("assets/marble.png"),
+        color_texture: new Texture("assets/marble.png"),
       }),
-      wood: new Material(new defs.Textured_Phong(1), {
+      wood: new Material(new Shadow_Textured_Phong_Shader(1), {
         ambient: 0.7,
         diffusivity: 0.7,
-        texture: new Texture("assets/wood.png"),
+        color_texture: new Texture("assets/wood.png"),
       }),
-      paddle: new Material(new defs.Phong_Shader(), {
+      paddle: new Material(new Shadow_Textured_Phong_Shader(), {
         ambient: 0.4,
         diffusivity: 0.6,
         color: hex_color("#ffffff"),
@@ -213,6 +130,24 @@ class Base_Scene extends Scene {
     };
     // The white material and basic shader are used for drawing the outline.
     this.white = new Material(new defs.Basic_Shader());
+    this.lightInit = lightInit.bind(this);
+    this.texture_buffer_init = texture_buffer_init.bind(this);
+    this.preRender = preRender.bind(this);
+    this.postRender = postRender.bind(this);
+    this.depth_tex = new Material(new Depth_Texture_Shader_2D(), {
+      color: color(0, 0, 0.0, 1),
+      ambient: 1,
+      diffusivity: 0,
+      specularity: 0,
+      texture: null,
+    });
+    this.light_src = new Material(new defs.Phong_Shader(), {
+      color: color(1, 1, 1, 1),
+      ambient: 1,
+      diffusivity: 0,
+      specularity: 0,
+    });
+    this.pure = new Material(new Color_Phong_Shader(), {});
   }
 
   display(context, program_state) {
@@ -229,9 +164,6 @@ class Base_Scene extends Scene {
       1,
       200
     );
-
-    program_state.lights = [new Light(this.light_position, color(1, 1, 1, 1), 200)];
-
   }
 }
 
@@ -256,7 +188,7 @@ export class Pong extends Base_Scene {
     this.player1_score = 0;
     this.player2_score = 0;
     this.last_team_scored = 0;
-    this.ball_speed = 1;
+    this.ball_speed = 0.3;
     this.game_started = false;
     this.difficulty = 0.3;
     this.game_paused = false;
@@ -961,7 +893,7 @@ export class Pong extends Base_Scene {
       {
         head: Mat4.identity()
           .times(Mat4.translation(-9, 8.8, 36))
-          .times(Mat4.rotation(-0.3 + Math.PI, 1, 0))
+          .times(Mat4.rotation(-0.3 + Math.PI, 0, 1, 0))
           .times(Mat4.scale(2, 2, 2))
           .times(Mat4.translation(0, 2.5, 0)),
         body: Mat4.identity()
@@ -1197,9 +1129,11 @@ export class Pong extends Base_Scene {
           context,
           program_state,
           x.ball_transform,
-          this.materials.plastic.override({
-            color: index == 0 ? this.ball_color : color(255, 0, 0, 1),
-          })
+          this.shadow_pass
+            ? this.materials.ball.override({
+                color: index == 0 ? this.ball_color : color(255, 0, 0, 1),
+              })
+            : this.pure
         );
       }
     });
@@ -1248,13 +1182,17 @@ export class Pong extends Base_Scene {
       context,
       program_state,
       this.paddle1_transform,
-      this.materials.paddle.override({ color: this.paddle1_color })
+      this.shadow_pass
+        ? this.materials.paddle.override({ color: this.paddle1_color })
+        : this.pure
     );
     this.shapes.box.draw(
       context,
       program_state,
       this.paddle2_transform,
-      this.materials.paddle.override({ color: hex_color("#FF0000") })
+      this.shadow_pass
+        ? this.materials.paddle.override({ color: hex_color("#FF0000") })
+        : this.pure
     );
   }
 
@@ -1350,7 +1288,7 @@ export class Pong extends Base_Scene {
     // reset ball count
     this.balls.splice(1);
     // reset ball speed
-    this.ball_speed = 1;
+    this.ball_speed = 0.3;
     // reset powerups
     this.powerup.current_running_id = null;
     // reset ball color
@@ -1499,45 +1437,56 @@ export class Pong extends Base_Scene {
         context,
         program_state,
         x.head,
-        this.materials.plastic.override({ color: color(1, 0.79, 0.035, 1) })
+        this.shadow_pass
+          ? this.materials.plastic.override({ color: color(1, 0.79, 0.035, 1) })
+          : this.pure
       );
       this.shapes.box.draw(
         context,
         program_state,
         x.body,
-        this.materials.plastic
+        this.shadow_pass ? this.materials.plastic : this.pure
       );
       this.shapes.box.draw(
         context,
         program_state,
         x.right_arm,
-        this.materials.plastic.override({
-          color: x.team == 1 ? color(0.2, 0.6, 1, 1) : color(1, 0, 0, 1),
-        })
+        this.shadow_pass
+          ? this.materials.plastic.override({
+              color: x.team == 1 ? color(0.2, 0.6, 1, 1) : color(1, 0, 0, 1),
+            })
+          : this.pure
       );
       this.shapes.box.draw(
         context,
         program_state,
         x.left_arm,
-        this.materials.plastic.override({
-          color: x.team == 1 ? color(0.2, 0.6, 1, 1) : color(1, 0, 0, 1),
-        })
+        this.shadow_pass
+          ? this.materials.plastic.override({
+              color: x.team == 1 ? color(0.2, 0.6, 1, 1) : color(1, 0, 0, 1),
+            })
+          : this.pure
       );
       this.shapes.box.draw(
         context,
         program_state,
         x.right_leg,
-        this.materials.plastic.override({
-          color: x.team == 1 ? color(0.2, 0.6, 1, 1) : color(1, 0, 0, 1),
-        })
+        this.shadow_pass
+          ? this.materials.plastic.override({
+              color: x.team == 1 ? color(0.2, 0.6, 1, 1) : color(1, 0, 0, 1),
+            })
+          : this.pure
       );
       this.shapes.box.draw(
         context,
         program_state,
         x.left_leg,
-        this.materials.plastic.override({
-          color: x.team == 1 ? color(0.2, 0.6, 1, 1) : color(1, 0.1, 0.1, 1),
-        })
+        this.shadow_pass
+          ? this.materials.plastic.override({
+              color:
+                x.team == 1 ? color(0.2, 0.6, 1, 1) : color(1, 0.1, 0.1, 1),
+            })
+          : this.pure
       );
     });
   }
@@ -1624,9 +1573,35 @@ export class Pong extends Base_Scene {
       );
     }
   }
-  render_science(context, program_state){
-    let model_transform = Mat4.identity();
+  render_scene(
+    context,
+    program_state,
+    shadow_pass,
+    draw_light_source = false,
+    draw_shadow = false
+  ) {
     let t = program_state.animation_time / 1000;
+    let light_position = this.light_position;
+    let light_color = this.light_color;
+    this.shadow_pass = shadow_pass;
+    this.draw_light_source = draw_light_source;
+    this.draw_shadow = draw_shadow;
+
+    program_state.draw_shadow = draw_shadow;
+
+    if (draw_light_source && shadow_pass) {
+      this.shapes.sphere.draw(
+        context,
+        program_state,
+        Mat4.translation(
+          light_position[0],
+          light_position[1],
+          light_position[2]
+        ).times(Mat4.scale(5, 5, 5)),
+        this.light_src.override({ color: light_color })
+      );
+    }
+    let model_transform = Mat4.identity();
     this.dt = program_state.animation_delta_time / 1000;
 
     // spawn a powerup every 5 seconds
@@ -1661,7 +1636,6 @@ export class Pong extends Base_Scene {
     // this.light_position = vec4(this.balls[0].ball_transform[0][3], this.balls[0].ball_transform[1][3], this.balls[0].ball_transform[2][3], 1)
     //     // program_state.lights = [new Light(this.light_position, color(1, 1, 1, 1), 100)];
 
-
     // every 1 seconds, perform a coin flip to determine if opponent tracks ball
     if (t - this.last_prediction_time >= 1) {
       this.last_prediction_time = t;
@@ -1691,7 +1665,6 @@ export class Pong extends Base_Scene {
 
     let light_wall = false;
     if(this.light_up_wall >= 1) {
-      console.log("Hello")
       light_wall = true;
     }
     console.log(this.light_up_wall)
@@ -1708,8 +1681,8 @@ export class Pong extends Base_Scene {
     this.draw_people(context, program_state);
     if (this.spin_people) {
       if (this.people_rotation < 2 * Math.PI) {
-        this.people_rotation += (Math.PI * 2) / 70;
-        this.celebrate((Math.PI * 2) / 70);
+        this.people_rotation += (Math.PI * 2) / 100;
+        this.celebrate((Math.PI * 2) / 100);
       } else {
         this.spin_people = false;
         this.people_rotation = 0;
@@ -1720,7 +1693,7 @@ export class Pong extends Base_Scene {
     this.light_up_wall = 0;
 
     // Display score
-    let scoreboard = Mat4.identity().times(Mat4.translation(-15, 30, -20));
+    let scoreboard = Mat4.identity().times(Mat4.translation(-17, 30, -43));
     this.shapes.text.set_string(
       "Player 1: " +
         this.player1_score.toString() +
@@ -1735,8 +1708,9 @@ export class Pong extends Base_Scene {
       this.materials.text
     );
 
+
     // Display difficulty
-    let difficulty = Mat4.identity().times(Mat4.translation(-15, 20, -20));
+    let difficulty = Mat4.identity().times(Mat4.translation(-15, 20, -43));
     let current_difficulty =
       this.difficulty <= 0
         ? "Impossible"
@@ -1757,7 +1731,22 @@ export class Pong extends Base_Scene {
     );
   }
   display(context, program_state) {
+    const gl = context.context;
     super.display(context, program_state);
-    this.render_science(context,program_state)
+    this.preRender(context, program_state);
+    this.lightInit(context, program_state);
+    this.render_scene(context, program_state, false, false, false);
+    // Step 2: unbind, draw to the canvas
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    program_state.view_mat = program_state.camera_inverse;
+    program_state.projection_transform = Mat4.perspective(
+      Math.PI / 4,
+      context.width / context.height,
+      0.5,
+      500
+    );
+    this.render_scene(context, program_state, true, true, true);
+    this.postRender(context, program_state);
   }
 }

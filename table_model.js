@@ -1,88 +1,178 @@
-import { defs, tiny } from './examples/common.js';
+import { defs, tiny } from "./examples/common.js";
 
 const {
-    Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene,
+  Vector,
+  Vector3,
+  vec,
+  vec3,
+  vec4,
+  color,
+  hex_color,
+  Matrix,
+  Mat4,
+  Light,
+  Shape,
+  Material,
+  Scene,
 } = tiny;
 
 export function draw_table(scene, context, program_state, model_transform){
-
-    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.scale(10,0.5,20)),scene.materials.plastic.override({color: hex_color("#000000")}))
+    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.scale(10,0.5,20)),scene.shadow_pass?scene.materials.plastic.override({color: hex_color("#223333")}): scene.pure)
     //sides
-    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(10.1,0.5,0)).times(Mat4.scale(0.1,0.5,20)),scene.materials.wood)
-    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-10.1,0.5,0)).times(Mat4.scale(0.1,0.5,20)),scene.materials.wood)
-    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,0.5,20.1)).times(Mat4.scale(10.2,0.5,0.1)),scene.materials.wood)
-    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,0.5,-20.1)).times(Mat4.scale(10.1,0.5,0.1)),scene.materials.wood)
+    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(10.1,0.5,0)).times(Mat4.scale(0.1,0.5,20)), scene.shadow_pass? scene.materials.floor : scene.pure)
+    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-10.1,0.5,0)).times(Mat4.scale(0.1,0.5,20)), scene.shadow_pass? scene.materials.wood : scene.pure)
+    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,0.5,20.1)).times(Mat4.scale(10.2,0.5,0.1)), scene.shadow_pass? scene.materials.wood : scene.pure)
+    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,0.5,-20.1)).times(Mat4.scale(10.1,0.5,0.1)), scene.shadow_pass? scene.materials.wood : scene.pure)
 
-   
-    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-9.5,-5.5,-19.5)).times(Mat4.scale(0.5,5,0.5)),scene.materials.wood)
-    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(9.5,-5.5,-19.5)).times(Mat4.scale(0.5,5,0.5)),scene.materials.wood)
-    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-9.5,-5.5,19.5)).times(Mat4.scale(0.5,5,0.5)),scene.materials.wood)
-    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(9.5,-5.5,19.5)).times(Mat4.scale(0.5,5,0.5)),scene.materials.wood)
+  scene.shapes.box.draw(
+    context,
+    program_state,
+    model_transform
+      .times(Mat4.translation(-9.5, -5.5, -19.5))
+      .times(Mat4.scale(0.5, 5, 0.5)),
+    scene.shadow_pass ? scene.materials.wood : scene.pure
+  );
+  scene.shapes.box.draw(
+    context,
+    program_state,
+    model_transform
+      .times(Mat4.translation(9.5, -5.5, -19.5))
+      .times(Mat4.scale(0.5, 5, 0.5)),
+    scene.shadow_pass ? scene.materials.wood : scene.pure
+  );
+  scene.shapes.box.draw(
+    context,
+    program_state,
+    model_transform
+      .times(Mat4.translation(-9.5, -5.5, 19.5))
+      .times(Mat4.scale(0.5, 5, 0.5)),
+    scene.shadow_pass ? scene.materials.wood : scene.pure
+  );
+  scene.shapes.box.draw(
+    context,
+    program_state,
+    model_transform
+      .times(Mat4.translation(9.5, -5.5, 19.5))
+      .times(Mat4.scale(0.5, 5, 0.5)),
+    scene.shadow_pass ? scene.materials.wood : scene.pure
+  );
 
-    // lines on table
-    scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,.01,0)).times(Mat4.scale(10,0.5,0.1)),scene.materials.plastic.override({color: color(1,1,1,1)}))
+  // scene.shapes.box.draw(context, program_state, Mat4.scale(10, 0.5, 10).times(Mat4.translation(0, 21, 0)), scene.shadow_pass? scene.materials.floor : scene.pure);
+  // lines on table
+  scene.shapes.box.draw(
+    context,
+    program_state,
+    model_transform
+      .times(Mat4.translation(0, 0.01, 0))
+      .times(Mat4.scale(10, 0.5, 0.1)),
+    scene.shadow_pass
+      ? scene.materials.plastic.override({ color: color(1, 1, 1, 1) })
+      : scene.pure
+  );
 
-
-    // scene.shapes.box.draw(context, program_state, Mat4.scale(10, 0.5, 10).times(Mat4.translation(0, 21, 0)), scene.materials.floor);
+  // scene.shapes.box.draw(context, program_state, Mat4.scale(10, 0.5, 10).times(Mat4.translation(0, 21, 0)), scene.materials.floor);
 }
 
-export function draw_room(scene, context, program_state, model_transform){
-    for(let i =0;i<5;i++){
-        scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,-10,-50)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.floor)
-    }
-    for(let i =0;i<5;i++){
-        scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,-10,-30)).times(Mat4.scale(10,0.5,10)),scene.materials.floor)
-    }
-    for(let i =0;i<5;i++){
-        scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,-10,-10)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.floor)
-    }
-    for(let i =0;i<5;i++){
-        scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,-10,10)).times(Mat4.scale(10,0.5,10)),scene.materials.floor)
-    }
-    for(let i =0;i<5;i++){
-        scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,-10,30)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.floor)
-    }
-    for(let i =0;i<5;i++){
-        scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,-10,50)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.floor)
-    }
+export function draw_room(scene, context, program_state, model_transform) {
+  for (let i = 0; i < 5; i++) {
+    scene.shapes.box.draw(
+      context,
+      program_state,
+      model_transform
+        .times(Mat4.translation(-50 + i * 20, -10, -50))
+        .times(Mat4.scale(10, 0.5, 10).times(Mat4.scale(1, 1, -1))),
+      scene.shadow_pass ? scene.materials.floor : scene.pure
+    );
+  }
+  for (let i = 0; i < 5; i++) {
+    scene.shapes.box.draw(
+      context,
+      program_state,
+      model_transform
+        .times(Mat4.translation(-50 + i * 20, -10, -30))
+        .times(Mat4.scale(10, 0.5, 10)),
+      scene.shadow_pass ? scene.materials.floor : scene.pure
+    );
+  }
+  for (let i = 0; i < 5; i++) {
+    scene.shapes.box.draw(
+      context,
+      program_state,
+      model_transform
+        .times(Mat4.translation(-50 + i * 20, -10, -10))
+        .times(Mat4.scale(10, 0.5, 10).times(Mat4.scale(1, 1, -1))),
+      scene.shadow_pass ? scene.materials.floor : scene.pure
+    );
+  }
+  for (let i = 0; i < 5; i++) {
+    scene.shapes.box.draw(
+      context,
+      program_state,
+      model_transform
+        .times(Mat4.translation(-50 + i * 20, -10, 10))
+        .times(Mat4.scale(10, 0.5, 10)),
+      scene.shadow_pass ? scene.materials.floor : scene.pure
+    );
+  }
+  for (let i = 0; i < 5; i++) {
+    scene.shapes.box.draw(
+      context,
+      program_state,
+      model_transform
+        .times(Mat4.translation(-50 + i * 20, -10, 30))
+        .times(Mat4.scale(10, 0.5, 10).times(Mat4.scale(1, 1, -1))),
+      scene.shadow_pass ? scene.materials.floor : scene.pure
+    );
+  }
+  for (let i = 0; i < 5; i++) {
+    scene.shapes.box.draw(
+      context,
+      program_state,
+      model_transform
+        .times(Mat4.translation(-50 + i * 20, -10, 50))
+        .times(Mat4.scale(10, 0.5, 10).times(Mat4.scale(1, 1, -1))),
+      scene.shadow_pass ? scene.materials.floor : scene.pure
+    );
+  }
 
-   
-   
-    // //walls
-    // scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,0,-50)).times(Mat4.scale(70,70,0.5)),scene.materials.wall)
-    // scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,20,-49)).times(Mat4.scale(10,10,0.5)),scene.materials.sky)
-    //
-    // scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,0,60)).times(Mat4.scale(70,70,0.5)),scene.materials.wall)
-    //
-    // scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(40,0,0)).times(Mat4.scale(0.5,70,70)),scene.materials.wall)
-    // scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-40,0,0)).times(Mat4.scale(0.5,70,70)),scene.materials.wall)
-    // //cells
-    // for(let i =0;i<5;i++){
-    //     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,-50)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.wall)
-    // }
-    // for(let i =0;i<5;i++){
-    //     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,-30)).times(Mat4.scale(10,0.5,10)),scene.materials.wall)
-    // }
-    // for(let i =0;i<5;i++){
-    //     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,-10)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.wall)
-    // }
-    // for(let i =0;i<5;i++){
-    //     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,10)).times(Mat4.scale(10,0.5,10)),scene.materials.wall)
-    // }
-    // for(let i =0;i<5;i++){
-    //     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,30)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.wall)
-    // }
-    // for(let i =0;i<5;i++){
-    //     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,50)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.wall)
-    // }
-    // scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,49,0)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.metal)
-
+  // //walls
+  // scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,0,-50)).times(Mat4.scale(70,70,0.5)),scene.materials.wall)
+  // scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,20,-49)).times(Mat4.scale(10,10,0.5)),scene.materials.sky)
+  //
+  // scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,0,60)).times(Mat4.scale(70,70,0.5)),scene.materials.wall)
+  //
+  // scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(40,0,0)).times(Mat4.scale(0.5,70,70)),scene.materials.wall)
+  // scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-40,0,0)).times(Mat4.scale(0.5,70,70)),scene.materials.wall)
+  // //cells
+  // for(let i =0;i<5;i++){
+  //     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,-50)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.wall)
+  // }
+  // for(let i =0;i<5;i++){
+  //     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,-30)).times(Mat4.scale(10,0.5,10)),scene.materials.wall)
+  // }
+  // for(let i =0;i<5;i++){
+  //     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,-10)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.wall)
+  // }
+  // for(let i =0;i<5;i++){
+  //     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,10)).times(Mat4.scale(10,0.5,10)),scene.materials.wall)
+  // }
+  // for(let i =0;i<5;i++){
+  //     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,30)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.wall)
+  // }
+  // for(let i =0;i<5;i++){
+  //     scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(-50+i*20,50,50)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.wall)
+  // }
+  // scene.shapes.box.draw(context,program_state,model_transform.times(Mat4.translation(0,49,0)).times(Mat4.scale(10,0.5,10).times(Mat4.scale(1,1,-1))),scene.materials.metal)
 }
 
-const Shadow_Texture_Phong = defs.Shadow_Texture_Phong =
-    class Shadow_Texture_Phong extends defs.Textured_Phong {
-        vertex_glsl_code() {
-            return this.shared_glsl_code() + `
+const Shadow_Texture_Phong =
+  (defs.Shadow_Texture_Phong = class Shadow_Texture_Phong extends (
+    defs.Textured_Phong
+  ) {
+    vertex_glsl_code() {
+      return (
+        scene.shared_glsl_code() +
+        `
                 varying vec2 f_tex_coord;
                 varying vec4 f_shadow_coord;
                 
@@ -106,10 +196,13 @@ const Shadow_Texture_Phong = defs.Shadow_Texture_Phong =
 
                     // Calculate the position in light space and pass it to the fragment shader
                     f_shadow_coord = light_projection_camera_model_transform * vec4( position, 1.0 );
-                }`;
-        }
-        fragment_glsl_code() {
-            return this.shared_glsl_code() + `
+                }`
+      );
+    }
+    fragment_glsl_code() {
+      return (
+        scene.shared_glsl_code() +
+        `
                 varying vec2 f_tex_coord;
                 varying vec4 f_shadow_coord;
 
@@ -151,56 +244,88 @@ const Shadow_Texture_Phong = defs.Shadow_Texture_Phong =
 
                     // Compute the final color with contributions from lights:
                     gl_FragColor.xyz += phong_model_lights( normalize( bumped_N ), vertex_worldspace ) * shadow;
-                }`;
-        }
-
-        update_GPU(context, gpu_addresses, gpu_state, model_transform, material) {
-            super.update_GPU(context, gpu_addresses, gpu_state, model_transform, material);
-            // debugger
-            context.uniformMatrix4fv(gpu_addresses.light_projection_camera_model_transform, false, 
-                Matrix.flatten_2D_to_1D(gpu_state.light_projection_camera_model_transform.transposed()));
-            
-            if (material.texture && material.texture.ready) {
-                context.uniform1i(gpu_addresses.texture, 0);
-                material.texture.activate(context);
-            }
-            if (material.shadow_map && material.shadow_map.ready) {
-                context.uniform1i(gpu_addresses.shadow_map, 1);
-                material.shadow_map.activate(context, 1);
-            }
-        }
+                }`
+      );
     }
 
-    export function renderSceneToShadowMap(gl, shadowMap, light_projection_view_matrix, scene) {
-        gl.bindFramebuffer(gl.FRAMEBUFFER, shadowMap.framebuffer);
-        gl.viewport(0, 0, shadowMap.width, shadowMap.height);
-        gl.clear(gl.DEPTH_BUFFER_BIT);
-    
-        // Render scene with a special shader that only outputs depth values
-        scene.draw(gl, light_projection_view_matrix, depth_shader_program);
-    
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    }
+    update_GPU(context, gpu_addresses, gpu_state, model_transform, material) {
+      super.update_GPU(
+        context,
+        gpu_addresses,
+        gpu_state,
+        model_transform,
+        material
+      );
+      // debugger
+      context.uniformMatrix4fv(
+        gpu_addresses.light_projection_camera_model_transform,
+        false,
+        Matrix.flatten_2D_to_1D(
+          gpu_state.light_projection_camera_model_transform.transposed()
+        )
+      );
 
-
-   export class ShadowMap {
-        constructor(gl, width = 1024, height = 1024) {
-            this.gl = gl;
-            this.width = width;
-            this.height = height;
-    
-            this.framebuffer = gl.createFramebuffer();
-            this.depthTexture = gl.createTexture();
-    
-            gl.bindTexture(gl.TEXTURE_2D, this.depthTexture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT16, width, height, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    
-            gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depthTexture, 0);
-            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        }
+      if (material.texture && material.texture.ready) {
+        context.uniform1i(gpu_addresses.texture, 0);
+        material.texture.activate(context);
+      }
+      if (material.shadow_map && material.shadow_map.ready) {
+        context.uniform1i(gpu_addresses.shadow_map, 1);
+        material.shadow_map.activate(context, 1);
+      }
     }
+  });
+
+export function renderSceneToShadowMap(
+  gl,
+  shadowMap,
+  light_projection_view_matrix,
+  scene
+) {
+  gl.bindFramebuffer(gl.FRAMEBUFFER, shadowMap.framebuffer);
+  gl.viewport(0, 0, shadowMap.width, shadowMap.height);
+  gl.clear(gl.DEPTH_BUFFER_BIT);
+
+  // Render scene with a special shader that only outputs depth values
+  scene.draw(gl, light_projection_view_matrix, depth_shader_program);
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+}
+
+export class ShadowMap {
+  constructor(gl, width = 1024, height = 1024) {
+    scene.gl = gl;
+    scene.width = width;
+    scene.height = height;
+
+    scene.framebuffer = gl.createFramebuffer();
+    scene.depthTexture = gl.createTexture();
+
+    gl.bindTexture(gl.TEXTURE_2D, scene.depthTexture);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.DEPTH_COMPONENT16,
+      width,
+      height,
+      0,
+      gl.DEPTH_COMPONENT,
+      gl.UNSIGNED_SHORT,
+      null
+    );
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, scene.framebuffer);
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER,
+      gl.DEPTH_ATTACHMENT,
+      gl.TEXTURE_2D,
+      scene.depthTexture,
+      0
+    );
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+}
